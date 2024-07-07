@@ -1,0 +1,719 @@
+/**
+ * File: GenerateCompleteReport.gs
+ * Date: 2024-07-05
+ * Author: [Your Name]
+ * Description: This script generates a complete report based on date ranges specified in a Google Sheet. It reads data from 'Form Response 1' tab and uses SKU ID, Add Code, and Remove Code from other tabs for filtering.
+ * Version: 1.0.0
+ */
+// Helper function to log messages for debugging
+
+function logMessage(message) {
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Reports');
+  var lastRow = sheet.getLastRow();
+  var nextRow = lastRow + 1;
+  var cell = sheet.getRange('E' + nextRow);
+  
+  // Format the date string to include only the day, month, year, and time
+  var now = new Date();
+  var formattedDate = Utilities.formatDate(now, Session.getScriptTimeZone(), 'dd-MM-yyyy HH:mm:ss');
+  cell.setValue(formattedDate + ': ' + message);
+}
+
+//Helper Function to pop a dialog
+function showDialog(myTitle, myMessage) {
+  var ui = SpreadsheetApp.getUi();
+  var result = ui.alert(myTitle, myMessage, ui.ButtonSet.OK);
+}
+
+// Function to generate a complete report
+function generateCompleteReport() {
+  try {
+    var activeSheet = SpreadsheetApp.openById('10fnz6o2mTnRVsO2ykyPbwRnTsoaPYQ9ZXJNJU2qrsmY');
+    var version = activeSheet.getSheetByName('Reports').getRange('B5').getValue();
+    logMessage('Report version: ' + version + 'Started');  
+    
+    //set time zone and boundary conditions
+    var timeZone = 'America/New_York';
+    var startDate = new Date(activeSheet.getSheetByName('Reports').getRange('B1').getValue());
+    var endDate = new Date(activeSheet.getSheetByName('Reports').getRange('B2').getValue());
+
+    startDate.setHours(0);
+    startDate.setMinutes(0);
+    startDate.setSeconds(0);
+    endDate.setHours(23);
+    endDate.setMinutes(59);
+    endDate.setSeconds(59);
+
+    logMessage('Start Date: ' + startDate + ' End Date: ' + endDate);
+    // Read all data from 'Form Response 1'
+   
+    //LOAD the list of Approved SKU ID's
+    var formsMasterSheetId = "1XDpd1Xp-8Sm6tdGeqHairJ_M5AxgKYhvfnSRyBgSexQ";
+    var formsMasterSheet = SpreadsheetApp.openById(formsMasterSheetId).getSheetByName("APPROVED-SKU");
+    var lastRow = formsMasterSheet.getLastRow();
+    var dataRange = formsMasterSheet.getRange(2, 1, lastRow - 1, 1);
+
+    //USE LATER
+    var approvedSKUs = dataRange.getValues();
+
+    /*
+    logMessage("Approved SKU IDs");
+    for (var i = 0; i < approvedSKUs.length; i++) {
+      var value = approvedSKUs[i][0];
+      if (value) {
+       logMessage(value);
+      }
+    }
+    */
+
+    //Load the list of Approved Remove Codes
+    formsMasterSheet = SpreadsheetApp.openById(formsMasterSheetId).getSheetByName("APPROVED-REMOVECODES");
+    lastRow = formsMasterSheet.getLastRow();
+    dataRange = formsMasterSheet.getRange(2, 1, lastRow - 1, 1);
+    var approvedRemoveCodes = dataRange.getValues();
+    
+    //Load the list of Approved Add Codes
+    formsMasterSheet = SpreadsheetApp.openById(formsMasterSheetId).getSheetByName("APPROVED-ADDCODES");
+    lastRow = formsMasterSheet.getLastRow();
+    dataRange = formsMasterSheet.getRange(2, 1, lastRow - 1, 1);
+    var approvedAddCodes = dataRange.getValues();
+  
+    
+    // Get the active spreadsheet and the 'ADD Form Response 1' sheet
+    var addDataSheetID = '10fnz6o2mTnRVsO2ykyPbwRnTsoaPYQ9ZXJNJU2qrsmY';
+    var addDataSheet = SpreadsheetApp.openById(addDataSheetID);
+    var addDataResponses = addDataSheet.getSheetByName('Form Responses 1');
+    if (!addDataResponses) {
+      logMessage('Add Form Responses 1 sheet not found. Stopping report generation.');
+      return;
+    }
+
+    // Get the active spreadsheet and the 'Remove Form Response 1' sheet
+    var removeDataSheetID = '1n-SA1pub-_4AL-xUKDyem-30I69XAn1csMy-lxZSURA';
+    var removeDataSheet = SpreadsheetApp.openById(removeDataSheetID);
+    var removeDataResponses = removeDataSheet.getSheetByName('Form Responses 1');
+    if (!removeDataResponses) {
+      logMessage('Remove Form Responses 1 sheet not found. Stopping report generation.');
+      return;
+    }
+
+    var lottingDataSheetID = '1ilGx1e8Z6-zORVJKyTnJ3MJIyqkegqzEveTpPhX-Gm8';
+    var lottingDataSheet = SpreadsheetApp.openById(lottingDataSheetID);
+    var lottingDataResponses = lottingDataSheet.getSheetByName('Form Responses 1');
+    if (!lottingDataResponses) {
+      logMessage('Lotting Form Responses 1 sheet not found. Stopping report generation.');
+      return;
+    }
+
+    
+    var sMonth = Utilities.formatDate(startDate,timeZone,"MMMM");
+    var eMonth = Utilities.formatDate(endDate,timeZone,"MMMM");
+    var sDay = Utilities.formatDate(startDate,timeZone,"dd");
+    var eDay = Utilities.formatDate(endDate,timeZone,"dd");
+    var sYear = Utilities.formatDate(startDate,timeZone,"yyyy");
+    var eYear = Utilities.formatDate(endDate,timeZone,"yyyy");
+    var newReportName = `Complete ${sMonth}-${sDay}-${sYear} to ${eMonth}-${eDay}-${eYear} version ${version}`;
+
+    logMessage('Creating Report Sheet: ' + newReportName);
+    var newReportSheet = activeSheet.insertSheet(newReportName);
+
+    // Insert rows and set values and formatting
+    newReportSheet.insertRows(1, 4); // Insert 4 rows at the top
+
+    // First row: separator row with gray background
+    var separatorRowRange = newReportSheet.getRange(1, 1, 1, 10);
+    separatorRowRange.setBackground('gray');
+
+    // Second row: "Report version"
+    newReportSheet.getRange('A2').setBackground('gray');
+    newReportSheet.getRange('B2').setValue('Complete Inventory Report ' + version);
+    newReportSheet.getRange('B2').setFontWeight("bold");
+
+    newReportSheet.getRange('D2').setValue('Version');
+    newReportSheet.getRange('D2').setFontWeight("bold");
+    newReportSheet.getRange('E2').setValue('2.0.0');
+    newReportSheet.getRange('E2').setFontWeight("bold");
+
+    newReportSheet.getRange('D3').setValue('Last Modified');
+    newReportSheet.getRange('D3').setFontWeight("bold");
+    newReportSheet.getRange('E3').setValue('July 07, 2024');
+    newReportSheet.getRange('E3').setFontWeight("bold");
+
+    // Third row: "Start Date: startDate"
+    newReportSheet.getRange('A3').setBackground('gray');
+    newReportSheet.getRange('B3').setValue('Start Date: ' + sMonth + ' ' + sDay + ', ' + sYear);
+    newReportSheet.getRange('B3').setFontWeight("bold");
+
+    // Fourth row: "End Date: endDate"
+    newReportSheet.getRange('A4').setBackground('gray');
+    newReportSheet.getRange('B4').setValue('End Date: ' + eMonth + ' ' + eDay + ', ' + eYear);
+    newReportSheet.getRange('B4').setFontWeight("bold");
+
+    //fifth Row separator
+    separatorRowRange = newReportSheet.getRange(5, 1, 1, 10);
+    separatorRowRange.setBackground('gray');
+    separatorRowRange = newReportSheet.getRange('G2:J4');
+    separatorRowRange.setBackground('gray');
+    
+    //Filter the Data Responses
+    //IF THE COLUMNS MOVE THIS WILL BREAK
+    var addDateColumn = 3;// Column D (3rd column)
+    var skuIDAddColumn = 6; // Column G (6th column)
+    var amountAddColumn = 8; // Column I (8th column)
+    var reasonCodeAddColumn = 10; //Column K (10th column)
+
+    var removeDateColumn = 2;// Column C (2nd column)
+    var skuIDRemoveColumn = 6; // Column G (6th column)
+    var amountRemoveColumn = 4; // Column E (4th column)
+    var reasonCodeRemoveColumn = 7; //Column H (10th column)
+    var removeEnvironmentLossColumn = 13; //Column N
+
+    var lottingDateColumn = 54;// Column BC (40th column)
+    var lottingEnvironmentalLossColumn = 41;// Column AP (30th column)
+
+
+    // Filter ADD data from Form Responses 1 between startDate and endDate
+    var formAddResponsesData = addDataResponses.getDataRange().getValues();
+    var filteredAddData = [];
+    for (var i = 1; i < formAddResponsesData.length; i++) {
+      var dateAdded = new Date(formAddResponsesData[i][addDateColumn]);
+      if (dateAdded >= startDate && dateAdded <= endDate) {
+        filteredAddData.push(formAddResponsesData[i]);
+      }
+    }
+    logMessage('Filtered Add Response Data and found: ' + filteredAddData.length + ' Rows in the date range specified.');
+        //From here we need to track the row number
+    var currentRow = 6; // Start inserting data from the 6th row
+
+    //Filter the Remove Data Responses
+    // Filter Remove data from Form Responses 1 between startDate and endDate
+    var formRemoveResponsesData = removeDataResponses.getDataRange().getValues();
+    var filteredRemoveData = [];
+    
+    //logMessage('START DATE: ' +  startDate);
+    //logMessage('Date at 420 ' + formRemoveResponsesData[420][removeDateColumn]);
+    //logMessage('Date at 421 ' + formRemoveResponsesData[421][removeDateColumn]);
+    //logMessage('Date at 422 ' + formRemoveResponsesData[422][removeDateColumn]);
+
+    for (var i = 1; i < formRemoveResponsesData.length; i++) {
+      var dateRemoved = new Date(formRemoveResponsesData[i][removeDateColumn]);
+      if (dateRemoved >= startDate && dateRemoved <= endDate) {
+        //logMessage('Date Removed: ' + dateRemoved + ' at array num: ' + i);
+        filteredRemoveData.push(formRemoveResponsesData[i]);
+      }
+    }
+    logMessage('Filtered Remove Response Data and found: ' + filteredRemoveData.length + ' Rows in the date range specified.');
+
+
+    // Filter ADD data from Form Responses 1 between startDate and endDate
+    var formLottingResponsesData = lottingDataResponses.getDataRange().getValues();
+    var filteredLottingData = [];
+    for (var i = 1; i < formLottingResponsesData.length; i++) {
+      var dateLotted = new Date(formLottingResponsesData[i][lottingDateColumn]);
+      if (dateLotted >= startDate && dateLotted <= endDate) {
+        filteredLottingData.push(formLottingResponsesData[i]);
+      }
+    }
+    logMessage('Filtered Lotting  Data and found: ' + filteredLottingData.length + ' Rows in the date range specified.');
+
+
+    newReportSheet.getRange(currentRow,1).setBackground('gray');
+    newReportSheet.getRange(currentRow, 2).setValue("SKU ID"); // SKU ID
+    newReportSheet.getRange(currentRow, 2).setFontWeight("bold");
+    newReportSheet.getRange(currentRow, 4).setValue("ADDED"); // Total Add
+    newReportSheet.getRange(currentRow, 4).setFontWeight("bold");
+    newReportSheet.getRange(currentRow, 6).setValue("REMOVED"); // Total Remove
+    newReportSheet.getRange(currentRow, 6).setFontWeight("bold");
+    newReportSheet.getRange(currentRow,7).setBackground('gray');
+    newReportSheet.getRange(currentRow,10).setBackground('gray');
+    // Increment current row
+    currentRow++;
+    
+    var addDataPt = 0;
+    var removeDataPt = 0;
+    //********************************* */
+    //SKUID ADD and REMOVE
+    // Calculate totals for each SKU ID in both Add and Remove
+    for (var i = 0; i < approvedSKUs.length; i++) {
+      var value = approvedSKUs[i][0];
+      if (value) {
+          addDataPt = calculateTotalForADDSKU(filteredAddData,value,skuIDAddColumn,amountAddColumn,reasonCodeAddColumn);
+          removeDataPt = calculateTotalForRemoveSKU(filteredRemoveData,value,skuIDRemoveColumn,amountRemoveColumn,reasonCodeRemoveColumn);
+          newReportSheet.getRange(currentRow,1).setBackground('gray');
+          newReportSheet.getRange(currentRow, 2).setValue(value); // SKU ID
+          newReportSheet.getRange(currentRow, 2).setFontWeight("bold");
+          newReportSheet.getRange(currentRow, 4).setValue(addDataPt); // Total Add
+          newReportSheet.getRange(currentRow, 4).setFontWeight("bold");
+          newReportSheet.getRange(currentRow, 6).setValue(removeDataPt); // Total Remove
+          newReportSheet.getRange(currentRow, 6).setFontWeight("bold");
+          newReportSheet.getRange(currentRow,7).setBackground('gray');
+          newReportSheet.getRange(currentRow,10).setBackground('gray');
+          // Increment current row
+          currentRow++;
+      }
+    }
+
+
+    logMessage('Current Row ' + currentRow);
+    separatorRowRange = newReportSheet.getRange(currentRow++, 1, 1, 10);
+    separatorRowRange.setBackground('gray');
+    
+    //********************************* */
+    //ADD CODE SUMMARIES
+    newReportSheet.getRange(currentRow,1).setBackground('gray');
+    newReportSheet.getRange(currentRow, 2).setValue("ADD CODE"); // SKU ID
+    newReportSheet.getRange(currentRow, 2).setFontWeight("bold");
+    newReportSheet.getRange(currentRow, 4).setValue("ADDED"); // Total Add
+    newReportSheet.getRange(currentRow, 4).setFontWeight("bold");
+    newReportSheet.getRange(currentRow,7).setBackground('gray');
+    newReportSheet.getRange(currentRow,10).setBackground('gray');
+    currentRow++;
+    for (var i = 0; i < approvedAddCodes.length; i++) {
+      var value = approvedAddCodes[i][0];
+      if (value) {
+          //calculateTotalbyAddCode(filteredData,addCodeSeeking,reasonCodeAddColumn,amountColumn){
+          addDataPt = calculateTotalbyAddCode(filteredAddData,value,reasonCodeAddColumn,amountAddColumn);
+          newReportSheet.getRange(currentRow,1).setBackground('gray');
+          newReportSheet.getRange(currentRow, 2).setValue(value); // SKU ID
+          newReportSheet.getRange(currentRow, 2).setFontWeight("bold");
+          newReportSheet.getRange(currentRow, 4).setValue(addDataPt); // Total Add
+          newReportSheet.getRange(currentRow, 4).setFontWeight("bold");
+          newReportSheet.getRange(currentRow,7).setBackground('gray');
+          newReportSheet.getRange(currentRow,10).setBackground('gray');
+          currentRow++;
+      }
+    }
+    newReportSheet.getRange(currentRow,1).setBackground('gray');
+    newReportSheet.getRange(currentRow, 2).setValue('LOSS DUE TO PROCESSING'); // SKU ID
+    newReportSheet.getRange(currentRow, 2).setFontWeight("bold");
+    var lossData = calculateTotalbyColumn(filteredLottingData,lottingEnvironmentalLossColumn);
+    newReportSheet.getRange(currentRow, 4).setValue(lossData); // Total Add
+    newReportSheet.getRange(currentRow, 4).setFontWeight("bold");
+    newReportSheet.getRange(currentRow,7).setBackground('gray');
+    newReportSheet.getRange(currentRow,10).setBackground('gray');
+    currentRow++;
+    
+    separatorRowRange = newReportSheet.getRange(currentRow++, 1, 1, 10);
+    separatorRowRange.setBackground('gray');
+     //********************************* */
+    //Remove CODE SUMMARIES
+    newReportSheet.getRange(currentRow,1).setBackground('gray');
+    newReportSheet.getRange(currentRow, 2).setValue("REMOVE CODE"); // SKU ID
+    newReportSheet.getRange(currentRow, 2).setFontWeight("bold");
+    newReportSheet.getRange(currentRow, 4).setValue("REMOVED"); // Total Add
+    newReportSheet.getRange(currentRow, 4).setFontWeight("bold");
+    newReportSheet.getRange(currentRow,7).setBackground('gray');
+    newReportSheet.getRange(currentRow,10).setBackground('gray');
+    currentRow++;
+
+    for (var i = 0; i < approvedRemoveCodes.length; i++) {
+      var value = approvedRemoveCodes[i][0];
+      if (value) {
+          removeDataPt = calculateTotalbyRemoveCode(filteredRemoveData,value,reasonCodeRemoveColumn,amountRemoveColumn);
+          newReportSheet.getRange(currentRow,1).setBackground('gray');
+          newReportSheet.getRange(currentRow, 2).setValue(value); // SKU ID
+          newReportSheet.getRange(currentRow, 2).setFontWeight("bold");
+          newReportSheet.getRange(currentRow, 4).setValue(removeDataPt); // Total Add
+          newReportSheet.getRange(currentRow, 4).setFontWeight("bold");
+          newReportSheet.getRange(currentRow,7).setBackground('gray');
+          newReportSheet.getRange(currentRow,10).setBackground('gray');
+          currentRow++;
+      }
+    }
+
+    //ADD LOSS DUE TO PACKAGING
+    newReportSheet.getRange(currentRow,1).setBackground('gray');
+    newReportSheet.getRange(currentRow, 2).setValue('LOSS DUE TO PACKAGING'); // SKU ID
+    newReportSheet.getRange(currentRow, 2).setFontWeight("bold");
+    var lossData = calculateTotalbyColumn(filteredRemoveData,removeEnvironmentLossColumn);
+    newReportSheet.getRange(currentRow, 4).setValue(lossData); // Total Add
+    newReportSheet.getRange(currentRow, 4).setFontWeight("bold");
+    newReportSheet.getRange(currentRow,7).setBackground('gray');
+    newReportSheet.getRange(currentRow,10).setBackground('gray');
+    currentRow++;
+
+    separatorRowRange = newReportSheet.getRange(currentRow++, 1, 1, 10);
+    separatorRowRange.setBackground('gray');
+
+    //SETUP THE CTLS REPORT
+    newReportSheet.getRange('H6').setValue('CTLS REPORT'); // SKU ID
+    newReportSheet.getRange('H6').setFontWeight("bold");
+    newReportSheet.getRange('H6').setBackground('white');
+    
+    newReportSheet.getRange('H7').setValue('Unpackaged Flower'); // SKU ID
+    newReportSheet.getRange('H7').setBackground('white');
+    newReportSheet.getRange('H7').setFontWeight("bold");
+    
+    newReportSheet.getRange('H8').setValue('Opening'); // SKU ID
+    newReportSheet.getRange('H8').setFontWeight("bold");
+    newReportSheet.getRange('I8').setValue('0'); // SKU ID
+    //newReportSheet.getRange('I8').setFormula(); // SKU ID
+    newReportSheet.getRange('H8').setBackground('white');
+    newReportSheet.getRange('I8').setBackground('white');
+
+    newReportSheet.getRange('H9').setValue('Qty Received in Canada'); // SKU ID
+    newReportSheet.getRange('H9').setFontWeight("bold");
+    newReportSheet.getRange('I9').setValue('0'); // SKU ID
+    //newReportSheet.getRange('I9').setFormula(); // SKU ID
+    newReportSheet.getRange('H9').setBackground('white');
+    newReportSheet.getRange('I9').setBackground('white');
+
+    newReportSheet.getRange('H10').setValue('Additions'); // SKU ID
+    newReportSheet.getRange('H10').setFontWeight("bold");
+    //newReportSheet.getRange('I10').setValue('0'); // SKU ID
+    newReportSheet.getRange('I10').setFormula('=I8+I9'); // SKU ID
+    newReportSheet.getRange('H10').setBackground('white');
+    newReportSheet.getRange('I10').setBackground('white');
+
+    newReportSheet.getRange('H11').setValue('Qty Processed'); // SKU ID
+    newReportSheet.getRange('H11').setFontWeight("bold");
+    newReportSheet.getRange('I11').setValue('0'); // SKU ID
+    //newReportSheet.getRange('I11').setFormula(); // SKU ID
+    newReportSheet.getRange('H11').setBackground('white');
+    newReportSheet.getRange('I11').setBackground('white');
+
+    newReportSheet.getRange('H12').setValue('Qty Destroyed'); // SKU ID
+    newReportSheet.getRange('H12').setFontWeight("bold");
+    newReportSheet.getRange('I12').setValue('0'); // SKU ID
+    //newReportSheet.getRange('I12').setFormula(); // SKU ID
+    newReportSheet.getRange('H12').setBackground('white');
+    newReportSheet.getRange('I12').setBackground('white');
+
+    newReportSheet.getRange('H13').setValue('Qty Set for analysis'); // SKU ID
+    newReportSheet.getRange('H13').setFontWeight("bold");
+    newReportSheet.getRange('I13').setValue('0'); // SKU ID
+    //newReportSheet.getRange('I13').setFormula(); // SKU ID
+    newReportSheet.getRange('H13').setBackground('white');
+    newReportSheet.getRange('I13').setBackground('white');
+
+    newReportSheet.getRange('H14').setValue('Reductions'); // SKU ID
+    newReportSheet.getRange('H14').setFontWeight("bold");
+    //newReportSheet.getRange('I10').setValue('0'); // SKU ID
+    newReportSheet.getRange('I14').setFormula('=sum(I11:I13)'); // SKU ID
+    newReportSheet.getRange('H14').setBackground('white');
+    newReportSheet.getRange('I14').setBackground('white');
+    
+    newReportSheet.getRange('H15').setValue('Closing'); // SKU ID
+    newReportSheet.getRange('H15').setFontWeight("bold");
+    //newReportSheet.getRange('I10').setValue('0'); // SKU ID
+    newReportSheet.getRange('I15').setFormula('=I8+I10-I14'); // SKU ID
+    newReportSheet.getRange('H15').setBackground('white');
+    newReportSheet.getRange('I15').setBackground('white');
+
+    newReportSheet.getRange('H16').setBackground('#D3D3D3');
+    newReportSheet.getRange('I16').setBackground('#D3D3D3');
+
+    newReportSheet.getRange('H17').setValue('Unpackaged Hemp'); // SKU ID
+    newReportSheet.getRange('H17').setBackground('white');
+    newReportSheet.getRange('H17').setFontWeight("bold");
+    
+    newReportSheet.getRange('H18').setValue('Opening'); // SKU ID
+    newReportSheet.getRange('H18').setFontWeight("bold");
+    newReportSheet.getRange('I18').setValue('0'); // SKU ID
+    //newReportSheet.getRange('I8').setFormula(); // SKU ID
+    newReportSheet.getRange('H18').setBackground('white');
+    newReportSheet.getRange('I18').setBackground('white');
+
+    newReportSheet.getRange('H19').setValue('Qty Received in Canada'); // SKU ID
+    newReportSheet.getRange('H19').setFontWeight("bold");
+    newReportSheet.getRange('I19').setValue('0'); // SKU ID
+    //newReportSheet.getRange('I9').setFormula(); // SKU ID
+    newReportSheet.getRange('H19').setBackground('white');
+    newReportSheet.getRange('I19').setBackground('white');
+
+    newReportSheet.getRange('H20').setValue('Additions'); // SKU ID
+    newReportSheet.getRange('H20').setFontWeight("bold");
+    //newReportSheet.getRange('I10').setValue('0'); // SKU ID
+    newReportSheet.getRange('I20').setFormula('=I18+I19'); // SKU ID
+    newReportSheet.getRange('H20').setBackground('white');
+    newReportSheet.getRange('I20').setBackground('white');
+
+    newReportSheet.getRange('H21').setValue('Qty Processed'); // SKU ID
+    newReportSheet.getRange('H21').setFontWeight("bold");
+    newReportSheet.getRange('I21').setValue('0'); // SKU ID
+    //newReportSheet.getRange('I11').setFormula(); // SKU ID
+    newReportSheet.getRange('H21').setBackground('white');
+    newReportSheet.getRange('I21').setBackground('white');
+
+    newReportSheet.getRange('H22').setValue('Qty Destroyed'); // SKU ID
+    newReportSheet.getRange('H22').setFontWeight("bold");
+    newReportSheet.getRange('I22').setValue('0'); // SKU ID
+    //newReportSheet.getRange('I12').setFormula(); // SKU ID
+    newReportSheet.getRange('H22').setBackground('white');
+    newReportSheet.getRange('I22').setBackground('white');
+
+    newReportSheet.getRange('H23').setValue('Qty Set for analysis'); // SKU ID
+    newReportSheet.getRange('H23').setFontWeight("bold");
+    newReportSheet.getRange('I23').setValue('0'); // SKU ID
+    //newReportSheet.getRange('I13').setFormula(); // SKU ID
+    newReportSheet.getRange('H23').setBackground('white');
+    newReportSheet.getRange('I23').setBackground('white');
+
+    newReportSheet.getRange('H24').setValue('Reductions'); // SKU ID
+    newReportSheet.getRange('H24').setFontWeight("bold");
+    //newReportSheet.getRange('I10').setValue('0'); // SKU ID
+    newReportSheet.getRange('I24').setFormula('=sum(I21:I23)'); // SKU ID
+    newReportSheet.getRange('H24').setBackground('white');
+    newReportSheet.getRange('I24').setBackground('white');
+    
+    newReportSheet.getRange('H25').setValue('Closing'); // SKU ID
+    newReportSheet.getRange('H25').setFontWeight("bold");
+    //newReportSheet.getRange('I10').setValue('0'); // SKU ID
+    newReportSheet.getRange('I25').setFormula('=I18+I20-I24'); // SKU ID
+    newReportSheet.getRange('H25').setBackground('white');
+    newReportSheet.getRange('I25').setBackground('white');
+
+    newReportSheet.getRange('H26').setBackground('#D3D3D3');
+    newReportSheet.getRange('I26').setBackground('#D3D3D3');
+
+    newReportSheet.getRange('H27').setValue('Unpackaged Pure Intermediaries'); // SKU ID
+    newReportSheet.getRange('H27').setBackground('white');
+    newReportSheet.getRange('H27').setFontWeight("bold");
+    
+    newReportSheet.getRange('H28').setValue('Opening Raw Material'); // SKU ID
+    newReportSheet.getRange('H28').setFontWeight("bold");
+    newReportSheet.getRange('I28').setValue('0'); // SKU ID
+    //newReportSheet.getRange('I8').setFormula(); // SKU ID
+    newReportSheet.getRange('H28').setBackground('white');
+    newReportSheet.getRange('I28').setBackground('white');
+
+    newReportSheet.getRange('H29').setValue('Opening Finished Goods'); // SKU ID
+    newReportSheet.getRange('H29').setFontWeight("bold");
+    newReportSheet.getRange('I29').setValue('0'); // SKU ID
+    //newReportSheet.getRange('I8').setFormula(); // SKU ID
+    newReportSheet.getRange('H29').setBackground('white');
+    newReportSheet.getRange('I29').setBackground('white');
+
+    newReportSheet.getRange('H30').setValue('Opening Inventory'); // SKU ID
+    newReportSheet.getRange('H30').setFontWeight("bold");
+    newReportSheet.getRange('I30').setFormula('=I28+I29'); // SKU ID
+    //newReportSheet.getRange('I8').setFormula(); // SKU ID
+    newReportSheet.getRange('H30').setBackground('white');
+    newReportSheet.getRange('I30').setBackground('white');
+
+    newReportSheet.getRange('H31').setValue('Quanity received in Canada (RM)'); // SKU ID
+    newReportSheet.getRange('H31').setFontWeight("bold");
+    newReportSheet.getRange('I31').setFormula('=D7/1000'); // SKU ID
+    //newReportSheet.getRange('I8').setFormula(); // SKU ID
+    newReportSheet.getRange('H31').setBackground('white');
+    newReportSheet.getRange('I31').setBackground('white');
+
+    newReportSheet.getRange('H32').setValue('Total production (FG)'); // SKU ID
+    newReportSheet.getRange('H32').setFontWeight("bold");
+    newReportSheet.getRange('I32').setFormula('=(D8+D9+D10+D16+D17+D18+D19+D20+D21+D22+D27+D28+D29+D30+D31+D32+D33+D34+D35)/1000-I34'); // SKU ID
+    //newReportSheet.getRange('I8').setFormula(); // SKU ID
+    newReportSheet.getRange('H32').setBackground('white');
+    newReportSheet.getRange('I32').setBackground('white');
+
+    newReportSheet.getRange('H33').setValue('Reprocessed FG'); // SKU ID
+    newReportSheet.getRange('H33').setFontWeight("bold");
+    newReportSheet.getRange('I33').setFormula('=D65/1000*-1'); // SKU ID
+    //newReportSheet.getRange('I8').setFormula(); // SKU ID
+    newReportSheet.getRange('H33').setBackground('white');
+    newReportSheet.getRange('I33').setBackground('white');
+
+    newReportSheet.getRange('H34').setValue('Quantity purchased/returned (FG)'); // SKU ID
+    newReportSheet.getRange('H34').setFontWeight("bold");
+    newReportSheet.getRange('I34').setFormula('=(D53-D76)/1000'); // SKU ID
+    //newReportSheet.getRange('I8').setFormula(); // SKU ID
+    newReportSheet.getRange('H34').setBackground('white');
+    newReportSheet.getRange('I34').setBackground('white');
+
+    newReportSheet.getRange('H35').setValue('Additions'); // SKU ID
+    newReportSheet.getRange('H35').setFontWeight("bold");
+    //newReportSheet.getRange('I10').setValue('0'); // SKU ID
+    newReportSheet.getRange('I35').setFormula('=sum(I31:I34)'); // SKU ID
+    newReportSheet.getRange('H35').setBackground('white');
+    newReportSheet.getRange('I35').setBackground('white');
+
+    newReportSheet.getRange('H36').setValue('Quantity incurred as drying/processing loss (RM)'); // SKU ID
+    newReportSheet.getRange('H36').setFontWeight("bold");
+    newReportSheet.getRange('I36').setValue('0'); // SKU ID
+    //newReportSheet.getRange('I8').setFormula(); // SKU ID
+    newReportSheet.getRange('H36').setBackground('white');
+    newReportSheet.getRange('I36').setBackground('white');
+
+    newReportSheet.getRange('H37').setValue('Quantity processed extracts other (RM)'); // SKU ID
+    newReportSheet.getRange('H37').setFontWeight("bold");
+    //newReportSheet.getRange('I10').setValue('0'); // SKU ID
+    newReportSheet.getRange('I37').setFormula('=D64/1000'); // SKU ID
+    newReportSheet.getRange('H37').setBackground('white');
+    newReportSheet.getRange('I37').setBackground('white');
+
+    newReportSheet.getRange('H38').setValue('Quantity returned to LP (RM)'); // SKU ID
+    newReportSheet.getRange('H38').setFontWeight("bold");
+    //newReportSheet.getRange('I10').setValue('0'); // SKU ID
+    newReportSheet.getRange('I38').setFormula('=D54/1000'); // SKU ID
+    newReportSheet.getRange('H38').setBackground('white');
+    newReportSheet.getRange('I38').setBackground('white');
+
+    newReportSheet.getRange('H39').setValue('Quantity sent for analysis (RM)'); // SKU ID
+    newReportSheet.getRange('H39').setFontWeight("bold");
+    //newReportSheet.getRange('I10').setValue('0'); // SKU ID
+    newReportSheet.getRange('I39').setFormula('=(D69+D70+D71)/1000'); // SKU ID
+    newReportSheet.getRange('H39').setBackground('white');
+    newReportSheet.getRange('I39').setBackground('white');
+
+    newReportSheet.getRange('H40').setValue('Quantity destroyed (RM)'); // SKU ID
+    newReportSheet.getRange('H40').setFontWeight("bold");
+    //newReportSheet.getRange('I10').setValue('0'); // SKU ID
+    newReportSheet.getRange('I40').setFormula('=(D78+D77+D79)/1000'); // SKU ID
+    newReportSheet.getRange('H40').setBackground('white');
+    newReportSheet.getRange('I40').setBackground('white');
+
+    newReportSheet.getRange('H41').setValue('Quantity delivered in Canada (FG sold)'); // SKU ID
+    newReportSheet.getRange('H41').setFontWeight("bold");
+    //newReportSheet.getRange('I10').setValue('0'); // SKU ID
+    newReportSheet.getRange('I41').setFormula('=D59/1000'); // SKU ID
+    newReportSheet.getRange('H41').setBackground('white');
+    newReportSheet.getRange('I41').setBackground('white');
+
+    newReportSheet.getRange('H42').setValue('Quantity delivered International (FG sold)'); // SKU ID
+    newReportSheet.getRange('H42').setFontWeight("bold");
+    //newReportSheet.getRange('I10').setValue('0'); // SKU ID
+    newReportSheet.getRange('I42').setFormula('=D58/1000'); // SKU ID
+    newReportSheet.getRange('H42').setBackground('white');
+    newReportSheet.getRange('I42').setBackground('white');
+
+    newReportSheet.getRange('H43').setValue('Environmental Loss (FG)'); // SKU ID
+    newReportSheet.getRange('H43').setFontWeight("bold");
+    //newReportSheet.getRange('I10').setValue('0'); // SKU ID
+    newReportSheet.getRange('I43').setFormula('=(D55+D84)/1000'); // SKU ID
+    newReportSheet.getRange('H43').setBackground('white');
+    newReportSheet.getRange('I43').setBackground('white');
+
+    newReportSheet.getRange('H44').setValue('Quantity destroyed (FG)'); // SKU ID
+    newReportSheet.getRange('H44').setFontWeight("bold");
+    //newReportSheet.getRange('I10').setValue('0'); // SKU ID
+    newReportSheet.getRange('I44').setFormula('=D80/1000'); // SKU ID
+    newReportSheet.getRange('H44').setBackground('white');
+    newReportSheet.getRange('I44').setBackground('white');
+
+    newReportSheet.getRange('H45').setValue('Quantity sent for analysis (FG)'); // SKU ID
+    newReportSheet.getRange('H45').setFontWeight("bold");
+    //newReportSheet.getRange('I10').setValue('0'); // SKU ID
+    newReportSheet.getRange('I45').setFormula('=D72/1000'); // SKU ID
+    newReportSheet.getRange('H45').setBackground('white');
+    newReportSheet.getRange('I45').setBackground('white');
+
+    newReportSheet.getRange('H46').setValue('Quantity sent for R&D (FG)'); // SKU ID
+    newReportSheet.getRange('H46').setFontWeight("bold");
+    //newReportSheet.getRange('I10').setValue('0'); // SKU ID
+    newReportSheet.getRange('I46').setFormula('=D60/1000'); // SKU ID
+    newReportSheet.getRange('H46').setBackground('white');
+    newReportSheet.getRange('I46').setBackground('white');
+
+    newReportSheet.getRange('H47').setValue('Reductions'); // SKU ID
+    newReportSheet.getRange('H47').setFontWeight("bold");
+    //newReportSheet.getRange('I10').setValue('0'); // SKU ID
+    newReportSheet.getRange('I47').setFormula('=sum(I36:I46)'); // SKU ID
+    newReportSheet.getRange('H47').setBackground('white');
+    newReportSheet.getRange('I47').setBackground('white');
+
+    newReportSheet.getRange('H48').setValue('Closing raw materials'); // SKU ID
+    newReportSheet.getRange('H48').setFontWeight("bold");
+    //newReportSheet.getRange('I10').setValue('0'); // SKU ID
+    newReportSheet.getRange('I48').setFormula('=I28+I31+I38-I39-I40'); // SKU ID
+    newReportSheet.getRange('H48').setBackground('white');
+    newReportSheet.getRange('I48').setBackground('white');
+
+    newReportSheet.getRange('H49').setValue('Closing finished goods'); // SKU ID
+    newReportSheet.getRange('H49').setFontWeight("bold");
+    //newReportSheet.getRange('I10').setValue('0'); // SKU ID
+    newReportSheet.getRange('I49').setFormula('=I29+I32+I33-I41-I42-I43-I44-I45-I46'); // SKU ID
+    newReportSheet.getRange('H49').setBackground('white');
+    newReportSheet.getRange('I49').setBackground('white');
+
+    // Increment version number
+    logMessage('Incrementing version - SUCCESS REPORT COMPLETE');
+    activeSheet.getSheetByName('Reports').getRange('B5').setValue(version + 1);
+    
+  } catch (e) {
+    logMessage('Error: ' + e.message);
+  }
+}
+
+function calculateTotalbyColumn(filteredData,amountColumn){
+  var total = 0;
+   for (var i = 0; i < filteredData.length; i++) {
+        total += filteredData[i][amountColumn];
+   }
+  return total;
+}
+
+function calculateTotalbyRemoveCode(filteredData,removeCodeSeeking,reasonCodeRemoveColumn,amountColumn){
+  var total = 0;
+   for (var i = 0; i < filteredData.length; i++) {
+      var foundCode = filteredData[i][reasonCodeRemoveColumn];
+      if (foundCode === removeCodeSeeking) {
+        total += filteredData[i][amountColumn];
+      }
+   }
+  return total;
+}
+function calculateTotalbyAddCode(filteredData,addCodeSeeking,reasonCodeAddColumn,amountColumn){
+  var total = 0;
+   for (var i = 0; i < filteredData.length; i++) {
+      var foundCode = filteredData[i][reasonCodeAddColumn];
+      if (foundCode === addCodeSeeking) {
+        total += filteredData[i][amountColumn];
+      }
+   }
+  return total;
+}
+
+function calculateTotalForADDSKU(filteredData, skuID, skuIDColumn, amountColumn, reasonCodeColumn) {
+  var total = 0;
+  for (var i = 0; i < filteredData.length; i++) {
+    if (filteredData[i][skuIDColumn] === skuID) {
+      var reasonCode = filteredData[i][reasonCodeColumn];
+      if (reasonCode !== 'Re-Lotting - EXTRACT' && reasonCode !== 'Re-Lotting - FINISHED GOOD') {
+        total += filteredData[i][amountColumn];
+      }
+    }
+  }
+  return total;
+}
+/*var skuIDRemoveColumn = 6; // Column G (6th column)
+    var amountRemoveColumn = 4; // Column E (4th column)
+    var reasonCodeRemoveColumn = 7; //Column H (10th column)
+    var removeEnvironmentLoss = 13; //Column N
+*/
+function calculateTotalForRemoveSKU(filteredData, skuID, skuIDColumn, amountColumn, reasonCodeColumn) {
+  var total = 0;
+  for (var i = 0; i < filteredData.length; i++) {
+    if (filteredData[i][skuIDColumn] === skuID) {
+      var reasonCode = filteredData[i][reasonCodeColumn];
+      //logMessage('Entry AT DATE: ' + filteredData[i][2]);
+      //
+      /*
+      if(skuID === 'SKU-1000-Crude THCa'){
+          logMessage('FOUND AT DATE: ' + filteredData[i][2]);
+      }
+      */
+      if (reasonCode !== 'Remove For Relotting - FINISHED GOOD' && reasonCode !== 'Remove For Relotting - EXTRACT') {
+        total += filteredData[i][amountColumn];
+        /*
+        if(skuID === 'SKU-1000-Crude THCa'){
+          logMessage('Total ' + total + ' SKU: ' + skuID + ' Reason Code: ' + reasonCode); 
+        }
+        */
+      }
+    }
+  }
+  return total;
+}
+/*
+    // Print out the results of filteredAddData from row 6 onwards
+    for (var i = 0; i < filteredAddData.length; i++) {
+      for (var j = 0; j < filteredAddData[i].length; j++) {
+        newReportSheet.getRange(6 + i, 1 + j).setValue(filteredAddData[i][j]);
+        currentRow++;
+      }
+    }
+    */
+
+// Function to show a dialog box for debugging (optional)
+function showDialog(message) {
+  SpreadsheetApp.getUi().alert(message);
+}
