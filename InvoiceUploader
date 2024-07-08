@@ -1,0 +1,114 @@
+var activeSheetId = '1C5hFiu2ao2cDu6OZ8Wc_zQLYNDk3TcfuLcstqUCUkec';
+var activeSheet = SpreadsheetApp.openById(activeSheetId);
+var loggingSheet = activeSheet.getSheetByName("Reports");
+
+function logMessage(message) {
+  if (!loggingSheet) {
+    Logger.log("FAILED TO LOAD REPORT SHEET");
+    return;
+  }
+  
+  var lastRow = loggingSheet.getLastRow();
+  var nextRow = lastRow + 1;
+  var cell = loggingSheet.getRange('A' + nextRow);
+  
+  // Format the date string to include only the day, month, year, and time
+  var now = new Date();
+  var formattedDate = Utilities.formatDate(now, Session.getScriptTimeZone(), 'dd-MM-yyyy HH:mm:ss');
+  cell.setValue(formattedDate + ': ' + message);
+}
+
+function invoiceFormSubmit(e) {
+  try {
+    if (!loggingSheet) {
+      Logger.log("FAILED TO LOAD REPORT SHEET");
+      return;
+    }
+
+    var sheet = e.range.getSheet();
+    var row = e.range.getRow();
+    var emailAddress = 'afisher@protonify.com';
+
+    // Read the values from the form response
+    var timestamp = sheet.getRange(row, 1).getValue();
+    var userEmail = sheet.getRange(row, 2).getValue();
+    var supplier = sheet.getRange(row, 3).getValue();
+    var invoiceDate = sheet.getRange(row, 4).getValue();
+    var fileLink = sheet.getRange(row, 5).getValue();
+
+    // Extract file ID from the file link
+    var fileId = fileLink.match(/[-\w]{25,}/);
+    if (!fileId) {
+      logMessage('File ID not found in the link.');
+      return;
+    }
+    logMessage('Invoice submission started');
+    
+    // Get the file from Google Drive
+    var file = DriveApp.getFileById(fileId[0]);
+    
+    // Create an attachment from the file
+    var blob = file.getBlob();
+    
+    // Compose the email
+    var subject = 'New Form Submission: ' + supplier;
+    var body = 'A new form has been submitted.\n\n' +
+               'Timestamp: ' + timestamp + '\n' +
+               'Email Address: ' + userEmail + '\n' +
+               'Supplier: ' + supplier + '\n\n' +
+               'Attached is the invoice file.';
+    var fromAddress = 'afisher@protonify.com';
+    var toAddress = 'info@protonify.com';
+
+    // Send the email
+    MailApp.sendEmail({
+      to: toAddress,
+      from: fromAddress,
+      subject: subject,
+      body: body,
+      attachments: [blob]
+    });
+
+    // On successful send, write a copy of the file into a root folder
+    var rootFolderId = '1eaTKq-_GbKNmQ836kmiwayszQQPmpRgo';
+    var rootFolder = DriveApp.getFolderById(rootFolderId);
+
+    // Calculate MonthYear from the user-inputted invoiceDate
+    var invoiceDateObj = new Date(invoiceDate);
+    var month = invoiceDateObj.toLocaleString('default', { month: 'long' });
+    var year = invoiceDateObj.getFullYear();
+    var monthYear = month + year;
+
+    // Create subfolder path
+    var supplierFolder;
+    var folders = rootFolder.getFoldersByName(supplier);
+    if (folders.hasNext()) {
+      supplierFolder = folders.next();
+    } else {
+      supplierFolder = rootFolder.createFolder(supplier);
+    }
+
+    var monthYearFolder;
+    folders = supplierFolder.getFoldersByName(monthYear);
+    if (folders.hasNext()) {
+      monthYearFolder = folders.next();
+    } else {
+      monthYearFolder = supplierFolder.createFolder(monthYear);
+    }
+
+    // Copy the file into the new folder
+    file.makeCopy(file.getName(), monthYearFolder);
+
+    logMessage('Invoice submitted by ' + userEmail + ' from ' + supplier + ' has been emailed and saved.');
+  } catch (e) {
+    logMessage('Error: ' + e.message);
+  }
+}
+
+// Install the trigger
+function installTrigger() {
+  ScriptApp.newTrigger('invoiceFormSubmit')
+    .forSpreadsheet(activeSheetId)
+    .onFormSubmit()
+    .create();
+}
