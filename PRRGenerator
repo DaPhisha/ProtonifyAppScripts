@@ -1,0 +1,151 @@
+function generatePRRForms() {
+
+  //showDialog("Hello World"); 
+  // Step 1: Read value from cell A2
+  //var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+    var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("PRR GENERATOR 1");
+
+    var m_DOC_PRR = sheet.getRange("B2").getValue();
+    var m_DOC_TITLE = sheet.getRange("B3").getValue();
+    var m_DOC_ID = sheet.getRange("B4").getValue();
+    var m_DOC_PO = sheet.getRange("B5").getValue();
+    var m_DOC_URL = sheet.getRange("B6").getValue();
+    var m_DOC_ORIGINATOR = sheet.getRange("B7").getValue();
+
+
+    // Target directory ID
+    //var targetDirectoryId = "1kCqwlVd096WWwPrD7YOixqk8M4HvVvSo";
+    var m_targetDirectoryId = sheet.getRange("B12").getValue();
+    // Original document ID
+    var m_originalDocIdA = sheet.getRange("B10").getValue();
+    var m_originalDocIdB = sheet.getRange("B11").getValue();
+
+    
+    var myTxt = "Found DOC_PRR: " + m_DOC_PRR + "<br>";
+    //    myTxt += "Found DOC_TITLE: " + m_DOC_TITLE + "<br>";
+    //    myTxt += "Found DOC_ID: " + m_DOC_ID + "<br>";
+    //    myTxt += "Found DOC_PO: " + m_DOC_PO + "<br>";
+    //    myTxt += "Found DOC_URL: " + m_DOC_URL + "<br>";
+    //    myTxt += "Found DOC_ORIGINATOR: " + m_DOC_ORIGINATOR + "<br>";
+    //    myTxt += "Found Template A File ID: " + m_originalDocIdA + "<br>";
+    //    myTxt += "Found Template B File ID: " + m_originalDocIdB + "<br>";
+    //    myTxt += "Found Target Directory ID: " + m_targetDirectoryId + "<br>";
+    
+
+        
+        // Step 2: Create a new subfolder within the target directory
+        var targetDirectory = DriveApp.getFolderById(m_targetDirectoryId);
+        var m_newSubfolder = null;
+        var m_templateA = null;
+        var m_templateB = null;
+        var m_finalA = null;
+        var m_finalB = null;
+        try {
+          
+          // create the new folder
+          //GPT: HOW DO I CREATE A Log URL TO THIS NEW FOLDER = NEW_FOLDER_URL?
+          m_newSubfolder = targetDirectory.createFolder(m_DOC_PRR);
+
+          // get a pointer to the two source templates
+          // Step 3: Copy the document into the new subfolder
+          m_templateA = DriveApp.getFileById(m_originalDocIdA);
+          m_finalA = m_templateA.makeCopy(m_DOC_PRR + " A", m_newSubfolder);
+
+          m_templateB = DriveApp.getFileById(m_originalDocIdB);
+          m_finalB = m_templateB.makeCopy(m_DOC_PRR + " B", m_newSubfolder);
+
+          myTxt += "Copying templates complete ...<br>";
+        } catch (e) {
+          //Logger.log(e.toString());
+          myTxt += "Copying templates FAILED:<br>" + e.toString();
+          showDialog(myTxt);
+          return;
+        }
+        
+        myTxt += "Replacing tokens...<br>";
+        var m_bodyA = null;
+        var m_docA = null;
+        var m_bodyB = null;
+        var m_docB = null;
+        var currentDate = new Date();
+        var options = { month: 'long', day: 'numeric', year: 'numeric' };
+        var m_date = currentDate.toLocaleDateString('en-US', options); 
+
+        try{
+
+         // Step 4: Open the copied document
+          m_docA = DocumentApp.openById(m_finalA.getId());
+          m_bodyA = m_docA.getBody();
+          m_bodyA.replaceText("<<DOC_PRR>>", m_DOC_PRR);
+          m_bodyA.replaceText("<<DOC_TITLE>>", m_DOC_TITLE);          
+          m_bodyA.replaceText("<<DOC_ID>>", m_DOC_ID);
+
+          //SET THE TEXT AS URL
+          
+          var searchText = m_docA.getBody().findText(m_DOC_ID);
+          /*
+          if (searchText) {
+              var textElement = searchText.getElement().asText();
+              textElement.setLinkUrl(searchText.getStartOffset(), searchText.getEndOffsetInclusive(), m_DOC_URL);
+          }
+          */
+          if (searchText) {
+            // Find the end position of the first instance
+            var endPos = searchText.getEndOffsetInclusive();
+
+            // Use findText again, starting from the character just after the first instance
+            searchText = m_docA.getBody().findText(m_DOC_ID, searchText);
+            if (searchText) { // This is now the second instance
+              var textElement = searchText.getElement().asText();
+              textElement.setLinkUrl(searchText.getStartOffset(), searchText.getEndOffsetInclusive(), m_DOC_URL);
+            }
+          }
+
+
+
+
+          m_bodyA.replaceText("<<DOC_ORIGINATOR>>", m_DOC_ORIGINATOR);
+          m_bodyA.replaceText("<<DOC_PO>>", m_DOC_PO);
+          
+          //generate the date
+         
+          //replace dates
+          m_bodyA.replaceText("<<DOC_DATE>>", m_date);
+
+          m_docB = DocumentApp.openById(m_finalB.getId());
+          m_bodyB = m_docB.getBody();
+          m_bodyB.replaceText("<<DOC_DATE>>", m_date);
+          m_bodyB.replaceText("<<DOC_PRR>>", m_DOC_PRR);
+
+        } catch (e){
+          myTxt += "Replacing TOKENS FAILED:<br>" + e.toString();
+          showDialog(myTxt);
+          return;
+        }
+
+        //GPT: I want to write a new row to a existing tab in the current sheet called GENERATOR HISTORY right after the last row enter a new row with
+        //write columns in the following order DOC_DATE, NEW_FOLDER_URL, DOC_PRR, DOC_TITLE, DOC_ID, DOC_URL, DOC_PO 
+
+        myTxt += "PRR Form Generation complete!<br>";
+        //myTxt += "<a href='"+ m_newSubfolder.getUrl() + "'>New Folder</a><br>";
+      
+        // After all replacements are done
+        var historySheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("GENERATOR HISTORY");
+        if (historySheet) {
+            // Append a new row with the specified values
+            historySheet.appendRow([m_date, m_newSubfolder.getUrl(), m_DOC_PRR, m_DOC_TITLE, m_DOC_ID, m_DOC_URL, m_DOC_PO]);
+        } else {
+             myTxt += "GENERATOR HISTORY sheet not found!<br>";
+        }
+
+
+    showDialog(myTxt);
+}
+
+function showDialog(myText) {
+  var html = HtmlService.createHtmlOutput('<p>' + myText + '</p>')
+      .setWidth(450)
+      .setHeight(300);
+  SpreadsheetApp.getUi() // Or DocumentApp or FormApp.
+      .showModalDialog(html, 'PRR Form Gen Dialog');
+}
