@@ -7,6 +7,16 @@
  */
 // Helper function to log messages for debugging
 
+function clearLog(){
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Reports');
+  var lastRow = sheet.getLastRow();
+  
+  // Clear the range from E2 to the last row in column E
+  if (lastRow > 1) {
+    sheet.getRange(6, 5, lastRow - 1, 1).clearContent(); // 5 represents column E
+  }
+}
+
 function logMessage(message) {
   var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Reports');
   var lastRow = sheet.getLastRow();
@@ -18,19 +28,12 @@ function logMessage(message) {
   var formattedDate = Utilities.formatDate(now, Session.getScriptTimeZone(), 'dd-MM-yyyy HH:mm:ss');
   cell.setValue(formattedDate + ': ' + message);
 }
-
-//Helper Function to pop a dialog
-function showDialog(myTitle, myMessage) {
-  var ui = SpreadsheetApp.getUi();
-  var result = ui.alert(myTitle, myMessage, ui.ButtonSet.OK);
-}
-
 // Function to generate a complete report
 function generateCompleteReport() {
   try {
     var activeSheet = SpreadsheetApp.openById('10fnz6o2mTnRVsO2ykyPbwRnTsoaPYQ9ZXJNJU2qrsmY');
     var version = activeSheet.getSheetByName('Reports').getRange('B5').getValue();
-    logMessage('Report version: ' + version + 'Started');  
+    logMessage('CTLS Report version: ' + version + 'Started');  
     
     //set time zone and boundary conditions
     var timeZone = 'America/New_York';
@@ -114,7 +117,7 @@ function generateCompleteReport() {
     var eYear = Utilities.formatDate(endDate,timeZone,"yyyy");
     var newReportName = `Complete ${sMonth}-${sDay}-${sYear} to ${eMonth}-${eDay}-${eYear} version ${version}`;
 
-    logMessage('Creating Report Sheet: ' + newReportName);
+    logMessage('Creating CTLS Report Sheet: ' + newReportName);
     var newReportSheet = activeSheet.insertSheet(newReportName);
 
     // Insert rows and set values and formatting
@@ -126,7 +129,7 @@ function generateCompleteReport() {
 
     // Second row: "Report version"
     newReportSheet.getRange('A2').setBackground('gray');
-    newReportSheet.getRange('B2').setValue('Complete Inventory Report ' + version);
+    newReportSheet.getRange('B2').setValue('CTLS Inventory Record ' + version);
     newReportSheet.getRange('B2').setFontWeight("bold");
 
     newReportSheet.getRange('D2').setValue('Version');
@@ -703,17 +706,510 @@ function calculateTotalForRemoveSKU(filteredData, skuID, skuIDColumn, amountColu
   }
   return total;
 }
-/*
-    // Print out the results of filteredAddData from row 6 onwards
-    for (var i = 0; i < filteredAddData.length; i++) {
-      for (var j = 0; j < filteredAddData[i].length; j++) {
-        newReportSheet.getRange(6 + i, 1 + j).setValue(filteredAddData[i][j]);
+
+function generateCRAReport() {
+   try {
+    var activeSheet = SpreadsheetApp.openById('10fnz6o2mTnRVsO2ykyPbwRnTsoaPYQ9ZXJNJU2qrsmY');
+    var version = activeSheet.getSheetByName('Reports').getRange('B5').getValue();
+    logMessage('CRA Record version: ' + version + 'Started');  
+    
+    //set time zone and boundary conditions
+    var timeZone = 'America/New_York';
+    var startDate = new Date(activeSheet.getSheetByName('Reports').getRange('B1').getValue());
+    var endDate = new Date(activeSheet.getSheetByName('Reports').getRange('B2').getValue());
+
+    startDate.setHours(0);
+    startDate.setMinutes(0);
+    startDate.setSeconds(0);
+    endDate.setHours(23);
+    endDate.setMinutes(59);
+    endDate.setSeconds(59);
+
+    logMessage('Start Date: ' + startDate + ' End Date: ' + endDate);
+    //create the new sheet
+    var sMonth = Utilities.formatDate(startDate,timeZone,"MMMM");
+    var eMonth = Utilities.formatDate(endDate,timeZone,"MMMM");
+    var sDay = Utilities.formatDate(startDate,timeZone,"dd");
+    var eDay = Utilities.formatDate(endDate,timeZone,"dd");
+    var sYear = Utilities.formatDate(startDate,timeZone,"yyyy");
+    var eYear = Utilities.formatDate(endDate,timeZone,"yyyy");
+
+    var newReportName = `CRA ${sMonth}-${sDay}-${sYear} to ${eMonth}-${eDay}-${eYear} version ${version}`;
+    logMessage('Creating CRA Report Sheet: ' + newReportName);
+    var newReportSheet = activeSheet.insertSheet(newReportName);
+
+    var separatorRowRange = newReportSheet.getRange(1, 1, 1, 10);
+    separatorRowRange.setBackground('gray');
+
+    // Second row: "Report version"
+    newReportSheet.getRange('A2').setBackground('gray');
+    newReportSheet.getRange('B2').setValue('Monthly CRA Record ' + version);
+    newReportSheet.getRange('B2').setFontWeight("bold");
+
+    newReportSheet.getRange('D2').setValue('Version');
+    newReportSheet.getRange('D2').setFontWeight("bold");
+    newReportSheet.getRange('E2').setValue('2.0.0');
+    newReportSheet.getRange('E2').setFontWeight("bold");
+
+    newReportSheet.getRange('D3').setValue('Last Modified');
+    newReportSheet.getRange('D3').setFontWeight("bold");
+    newReportSheet.getRange('E3').setValue('July 07, 2024');
+    newReportSheet.getRange('E3').setFontWeight("bold");
+
+    // Third row: "Start Date: startDate"
+    newReportSheet.getRange('A3').setBackground('gray');
+    newReportSheet.getRange('B3').setValue('Start Date: ' + sMonth + ' ' + sDay + ', ' + sYear);
+    newReportSheet.getRange('B3').setFontWeight("bold");
+
+    // Fourth row: "End Date: endDate"
+    newReportSheet.getRange('A4').setBackground('gray');
+    newReportSheet.getRange('B4').setValue('End Date: ' + eMonth + ' ' + eDay + ', ' + eYear);
+    newReportSheet.getRange('B4').setFontWeight("bold");
+
+    //fifth Row separator
+    separatorRowRange = newReportSheet.getRange(6, 1, 1, 10);
+    separatorRowRange.setBackground('gray');
+    separatorRowRange = newReportSheet.getRange('G2:J4');
+    separatorRowRange.setBackground('gray');
+    var separatorRowRange = newReportSheet.getRange(5, 1, 1, 10);
+    separatorRowRange.setBackground('gray');
+    separatorRowRange = newReportSheet.getRange('A6:J6');
+    separatorRowRange.setBackground('#D3D3D3');
+    newReportSheet.getRange('B6').setValue('Raw Materials Approved For Use').setFontWeight("bold");
+    var currentRow = 7; // Start inserting data from the 7th row
+    //Approved for Processing 
+    var approvedForProcessingSheetID = '18S5iRYbi2K_ha6P8rMqm1ELifUQJRFbGs6_7TIxbl-M';
+    var approvedForProcessingSheet = SpreadsheetApp.openById(approvedForProcessingSheetID).getActiveSheet();
+    var approvedData = approvedForProcessingSheet.getDataRange().getValues();
+
+    if (!approvedData) {
+      logMessage('Approved for processing sheet not found. Stopping report generation.');
+      return;
+    }
+    var approvedForProcessingTypeColumn = 24;
+    var approvedForProcessingDateColumn = 21;
+    var approvedForProcessingApprovedLotID = 25;
+    var approvedForProcessingAmtColumn = 22;
+    var approvedForProcessingPercentTHCColumn = 23;
+    var approvedForProcessingPercentTHCAColumn = 26;
+    var approvedForProcessingPOColumn = 27;
+
+    logMessage('Found Approved for processing records length = ' + approvedData.length);
+
+
+    var removedForProcessingSheetID = '1n-SA1pub-_4AL-xUKDyem-30I69XAn1csMy-lxZSURA';
+    var removedForProcessingSheet = SpreadsheetApp.openById(removedForProcessingSheetID).getActiveSheet();
+    var removedProcessingData = removedForProcessingSheet.getDataRange().getValues();
+    var reasonCodeRemoveColumn = 7; //Column H (10th column)
+    var removeDateColumn = 2;// Column C (2nd column)
+    var skuIDRemoveColumn = 6; // Column G (6th column)
+    var amountRemoveColumn = 4; // Column E (4th column)
+    var removeEnvironmentLossColumn = 13; //Column N
+    var removeLotIDColumn = 3;// 
+
+    if (!removedProcessingData) {
+      logMessage('Removed for processing sheet not found. Stopping report generation.');
+      return;
+    }
+     logMessage('Found Removed for processing records length = ' + removedProcessingData.length);
+    
+    // Print column headers
+    newReportSheet.getRange(currentRow, 1).setValue('Type').setFontWeight("bold").setBackground('#D3D3D3');
+    newReportSheet.getRange(currentRow, 2).setValue('Date').setFontWeight("bold").setBackground('#D3D3D3');
+    newReportSheet.getRange(currentRow, 3).setValue('Approved Lot ID').setFontWeight("bold").setBackground('#D3D3D3');
+    newReportSheet.getRange(currentRow, 4).setValue('Amount').setFontWeight("bold").setBackground('#D3D3D3');
+    newReportSheet.getRange(currentRow, 5).setValue('PO Number').setFontWeight("bold").setBackground('#D3D3D3');
+    newReportSheet.getRange(currentRow, 6).setValue('Percent THC').setFontWeight("bold").setBackground('#D3D3D3');
+    newReportSheet.getRange(currentRow, 7).setValue('Percent THCA').setFontWeight("bold").setBackground('#D3D3D3');
+    newReportSheet.getRange(currentRow, 8).setValue('Total THC (kg)').setFontWeight("bold").setBackground('#D3D3D3');
+    newReportSheet.getRange(currentRow, 9).setValue('Total THCa (kg)').setFontWeight("bold").setBackground('#D3D3D3');
+    newReportSheet.getRange(currentRow,10).setBackground('#D3D3D3');
+    currentRow++;
+
+    // Loop through the approved data and add rows to the new report sheet
+    for (var i = 1; i < approvedData.length; i++) {
+      var dateProcessed = new Date(approvedData[i][approvedForProcessingDateColumn]);
+      var type = approvedData[i][approvedForProcessingTypeColumn];
+
+      if (dateProcessed >= startDate && dateProcessed <= endDate && type === 'Pure Intermediary') {
+        newReportSheet.getRange(currentRow, 1).setValue(approvedData[i][approvedForProcessingTypeColumn]);
+        newReportSheet.getRange(currentRow, 2).setValue(approvedData[i][approvedForProcessingDateColumn]);
+        newReportSheet.getRange(currentRow, 3).setValue(approvedData[i][approvedForProcessingApprovedLotID]);
+        newReportSheet.getRange(currentRow, 4).setValue(approvedData[i][approvedForProcessingAmtColumn]);
+        newReportSheet.getRange(currentRow, 5).setValue(approvedData[i][approvedForProcessingPOColumn]);
+        newReportSheet.getRange(currentRow, 6).setValue(approvedData[i][approvedForProcessingPercentTHCColumn]);
+        newReportSheet.getRange(currentRow, 7).setValue(approvedData[i][approvedForProcessingPercentTHCAColumn]);
+        // Set formulas for Total THC (kg) and Total THCA (kg)
+        newReportSheet.getRange(currentRow, 8).setFormula('=D' + currentRow + ' * (F' + currentRow + ' / 100)');
+        newReportSheet.getRange(currentRow, 9).setFormula('=D' + currentRow + ' * (G' + currentRow + ' / 100)');
+        newReportSheet.getRange(currentRow,10).setBackground('#D3D3D3');
         currentRow++;
       }
     }
-    */
+    separatorRowRange = newReportSheet.getRange(currentRow, 1, 1, 10);
+    separatorRowRange.setBackground('gray');
+    separatorRowRange = newReportSheet.getRange(currentRow, 1, 1, 10);
+    separatorRowRange.setBackground('#D3D3D3');
+    newReportSheet.getRange(currentRow, 2).setValue("Raw Materials Removed For Processing").setFontWeight("bold"); // SKU ID
+    // Increment current row
+    currentRow++;
 
-// Function to show a dialog box for debugging (optional)
-function showDialog(message) {
-  SpreadsheetApp.getUi().alert(message);
+
+    newReportSheet.getRange(currentRow, 1).setValue('Reason Code').setFontWeight("bold").setBackground('#D3D3D3');
+    newReportSheet.getRange(currentRow, 2).setValue('Date').setFontWeight("bold").setBackground('#D3D3D3');
+    newReportSheet.getRange(currentRow, 3).setValue('SKU ID').setFontWeight("bold").setBackground('#D3D3D3');
+    newReportSheet.getRange(currentRow, 4).setValue('Lot ID').setFontWeight("bold").setBackground('#D3D3D3');
+    newReportSheet.getRange(currentRow, 5).setValue('Amount').setFontWeight("bold").setBackground('#D3D3D3');
+    newReportSheet.getRange(currentRow, 6).setValue('Environmental Loss').setFontWeight("bold").setBackground('#D3D3D3');
+    newReportSheet.getRange(currentRow, 7).setValue('Total THC %').setFontWeight("bold").setBackground('#D3D3D3');
+    newReportSheet.getRange(currentRow, 8).setValue('Total THC (kg)').setFontWeight("bold").setBackground('#D3D3D3');
+    newReportSheet.getRange(currentRow, 9).setBackground('#D3D3D3');
+    newReportSheet.getRange(currentRow, 10).setBackground('#D3D3D3');
+    currentRow++;
+
+  // Loop through the removed processing data and add rows to the new report sheet
+  for (var i = 1; i < removedProcessingData.length; i++) {
+    var dateProcessed = new Date(removedProcessingData[i][removeDateColumn]);
+    var reasonCode = removedProcessingData[i][reasonCodeRemoveColumn];
+    /*
+    TO DO ADD CANNABIS FLOWER BACK IN IF WE NEED IT
+    */
+    if (dateProcessed >= startDate && dateProcessed <= endDate && reasonCode === 'Remove For Further Processing - EXTRACT') {
+      newReportSheet.getRange(currentRow, 1).setValue(removedProcessingData[i][reasonCodeRemoveColumn]);
+      newReportSheet.getRange(currentRow, 2).setValue(removedProcessingData[i][removeDateColumn]);
+      newReportSheet.getRange(currentRow, 3).setValue(removedProcessingData[i][skuIDRemoveColumn]);
+      newReportSheet.getRange(currentRow, 4).setValue(removedProcessingData[i][removeLotIDColumn]);
+      newReportSheet.getRange(currentRow, 5).setValue(removedProcessingData[i][amountRemoveColumn]);
+      newReportSheet.getRange(currentRow, 6).setValue(removedProcessingData[i][removeEnvironmentLossColumn]);
+
+      //Look up THC value for lot ID removedProcessingData[i][removeLotIDColumn]
+      var lookupTHC = lookupExtractTHCFromLotID(approvedData, approvedForProcessingApprovedLotID,approvedForProcessingPercentTHCColumn,removedProcessingData[i][removeLotIDColumn]);
+      newReportSheet.getRange(currentRow, 7).setValue(lookupTHC);
+      newReportSheet.getRange(currentRow, 8).setFormula('=((E' + currentRow + '-F' + currentRow + ') * (G' + currentRow + ' / 100))/1000');
+      currentRow++;
+      }
+    }
+
+    //NEXT add Approved for Sale Lots
+    separatorRowRange = newReportSheet.getRange(currentRow, 1, 1, 10);
+    separatorRowRange.setBackground('gray');
+    separatorRowRange = newReportSheet.getRange(currentRow, 1, 1, 10);
+    separatorRowRange.setBackground('#D3D3D3');
+    newReportSheet.getRange(currentRow, 2).setValue("Approved For Sales").setFontWeight("bold"); // SKU ID
+    // Increment current row
+    currentRow++;
+
+    var approvedForSalesSheetID = '1J2-Kjz7NasGwE5GFJ0dz7AEIOXNfyoBMEEuwNd4Xdhs';
+    var approvedForSalesSheet = SpreadsheetApp.openById(approvedForSalesSheetID).getActiveSheet();
+    var approvedForSalesData = approvedForSalesSheet.getDataRange().getValues();
+    var approvedDateColumn = 2; // Column C (2nd column)
+    var approvedLotIDColumn = 3; // Column D (3rd column)
+    var approvedSKUTypeColumn = 8; // Column I (8th column)
+    var approvedLotSizeColumn = 12; // Column L (12th column)
+    var approvedTotalTHCColumn = 13; // Column M (13th column)
+    if (!approvedForSalesData) {
+      logMessage('Approved For Sales sheet not found. Stopping report generation.');
+      return;
+    }
+    logMessage('Found Approved For Sales records length = ' + approvedForSalesData.length);
+
+
+    // Print column headers
+  newReportSheet.getRange(currentRow, 1).setValue('Date').setFontWeight("bold").setBackground('#D3D3D3');
+  newReportSheet.getRange(currentRow, 2).setValue('Lot ID').setFontWeight("bold").setBackground('#D3D3D3');
+  newReportSheet.getRange(currentRow, 3).setValue('SKU Type').setFontWeight("bold").setBackground('#D3D3D3');
+  newReportSheet.getRange(currentRow, 4).setValue('Lot Size').setFontWeight("bold").setBackground('#D3D3D3');
+  newReportSheet.getRange(currentRow, 5).setValue('THC %').setFontWeight("bold").setBackground('#D3D3D3');
+  newReportSheet.getRange(currentRow, 6).setValue('Total THC (kg)').setFontWeight("bold").setBackground('#D3D3D3');
+  newReportSheet.getRange(currentRow, 7).setValue('Total THC (mg)').setFontWeight("bold").setBackground('#D3D3D3');
+  newReportSheet.getRange(currentRow, 8).setBackground('#D3D3D3');
+  newReportSheet.getRange(currentRow, 9).setBackground('#D3D3D3');
+  newReportSheet.getRange(currentRow, 10).setBackground('#D3D3D3');
+  currentRow++;
+
+  // Loop through the approved for sales data and add rows to the new report sheet
+  for (var i = 1; i < approvedForSalesData.length; i++) {
+    var dateProcessed = new Date(approvedForSalesData[i][approvedDateColumn]);
+    if (dateProcessed >= startDate && dateProcessed <= endDate) {
+      newReportSheet.getRange(currentRow, 1).setValue(approvedForSalesData[i][approvedDateColumn]);
+      newReportSheet.getRange(currentRow, 2).setValue(approvedForSalesData[i][approvedLotIDColumn]);
+      newReportSheet.getRange(currentRow, 3).setValue(approvedForSalesData[i][approvedSKUTypeColumn]);
+      newReportSheet.getRange(currentRow, 4).setValue(approvedForSalesData[i][approvedLotSizeColumn]);
+      newReportSheet.getRange(currentRow, 5).setValue(approvedForSalesData[i][approvedTotalTHCColumn]);
+      newReportSheet.getRange(currentRow, 6).setFormula('=(D' + currentRow + ' * (E' + currentRow + ' / 100))/1000');
+      newReportSheet.getRange(currentRow, 7).setFormula('=(D' + currentRow + ' * (E' + currentRow + ' / 100))*1000'); 
+      currentRow++;
+    }
+  }
+
+
+
+    //REMOVED FINISHED GOODS
+    separatorRowRange = newReportSheet.getRange(currentRow, 1, 1, 10);
+    separatorRowRange.setBackground('gray');
+    separatorRowRange = newReportSheet.getRange(currentRow, 1, 1, 10);
+    separatorRowRange.setBackground('#D3D3D3');
+    newReportSheet.getRange(currentRow, 2).setValue("Removed Finished Goods").setFontWeight("bold"); // SKU ID
+    // Increment current row
+    currentRow++;
+
+    var removedFinishedGoodsSheetID = '1n-SA1pub-_4AL-xUKDyem-30I69XAn1csMy-lxZSURA';
+    var removedFinishedGoodsSheet = SpreadsheetApp.openById(removedFinishedGoodsSheetID).getActiveSheet();
+    var removedFinishedGoodsData = removedFinishedGoodsSheet.getDataRange().getValues();
+    var reasonCodeRemoveFinishedGoodsColumn = 7; //Column H (10th column)
+    var removeFinishGoodsDateColumn = 2;// Column C (2nd column)
+    var skuIDRemoveFinishedGoodsColumn = 6; // Column G (6th column)
+    var removeFinishedGoodsLotIDColumn = 3;// 
+    var amountRemoveFinishedGoodsColumn = 4; // Column E (4th column)
+    var removeFinishedGoodsEnvironmentLossColumn = 13; //Column N
+    
+
+    if (!removedFinishedGoodsData) {
+      logMessage('Removed Finisheoods G sheet not found. Stopping report generation.');
+      return;
+    }
+     logMessage('Found Removed Finished Goods records length = ' + removedFinishedGoodsData.length);
+    
+    var validReasonCodes = [
+    'Remove International Sales - FINISHED GOOD',
+    'Remove Domestic Sale - FINISHED GOOD',
+    'Removal Research Sample - FINISHED GOOD',
+    'Remove For Testing - FINISHED GOOD',
+    'Remove For Destruction - FINISHED GOOD',
+    'Remove For Quarantine - FINISHED GOOD',
+    'Remove Returned - FINISHED GOOD'
+  ];
+
+    // Print column headers
+  var removedFinishedGoodsHeaderRow = currentRow;
+  newReportSheet.getRange(currentRow, 1).setValue('Date').setFontWeight("bold").setBackground('#D3D3D3');
+  newReportSheet.getRange(currentRow, 2).setValue('Reason Code').setFontWeight("bold").setBackground('#D3D3D3');
+  newReportSheet.getRange(currentRow, 3).setValue('SKU ID').setFontWeight("bold").setBackground('#D3D3D3');
+  newReportSheet.getRange(currentRow, 4).setValue('Lot ID').setFontWeight("bold").setBackground('#D3D3D3');
+  newReportSheet.getRange(currentRow, 5).setValue('Amount').setFontWeight("bold").setBackground('#D3D3D3');
+  newReportSheet.getRange(currentRow, 6).setValue('Environmental Loss').setFontWeight("bold").setBackground('#D3D3D3');
+  newReportSheet.getRange(currentRow, 7).setValue('Total THC %').setFontWeight("bold").setBackground('#D3D3D3');
+  newReportSheet.getRange(currentRow, 8).setValue('Total THC (mg)').setFontWeight("bold").setBackground('#D3D3D3');
+  for (var i = 0; i < validReasonCodes.length; i++) {
+      newReportSheet.getRange(currentRow, 9+i).setValue(validReasonCodes[i]).setFontWeight("bold").setBackground('gray').setWrap(true);;
+  }
+  currentRow++;
+
+  // Loop through the removed finished goods data and add rows to the new report sheet
+  for (var i = 1; i < removedFinishedGoodsData.length; i++) {
+    var dateProcessed = new Date(removedFinishedGoodsData[i][removeFinishGoodsDateColumn]);
+    var reasonCode = removedFinishedGoodsData[i][reasonCodeRemoveFinishedGoodsColumn];
+
+    if (
+      dateProcessed >= startDate &&
+      dateProcessed <= endDate &&
+      validReasonCodes.includes(reasonCode)
+    ) {
+      newReportSheet.getRange(currentRow, 1).setValue(removedFinishedGoodsData[i][removeFinishGoodsDateColumn]);
+      newReportSheet.getRange(currentRow, 2).setValue(removedFinishedGoodsData[i][reasonCodeRemoveFinishedGoodsColumn]);
+      newReportSheet.getRange(currentRow, 3).setValue(removedFinishedGoodsData[i][skuIDRemoveFinishedGoodsColumn]);
+      newReportSheet.getRange(currentRow, 4).setValue(removedFinishedGoodsData[i][removeFinishedGoodsLotIDColumn]);
+      newReportSheet.getRange(currentRow, 5).setValue(removedFinishedGoodsData[i][amountRemoveFinishedGoodsColumn]);
+      newReportSheet.getRange(currentRow, 6).setValue(removedFinishedGoodsData[i][removeFinishedGoodsEnvironmentLossColumn]);
+      //Look up THC value for lot ID removedProcessingData[i][removeLotIDColumn]
+      var lookupTHC = lookupExtractTHCFromLotID(approvedForSalesData, approvedLotIDColumn,approvedTotalTHCColumn,removedFinishedGoodsData[i][removeFinishedGoodsLotIDColumn]);
+
+      newReportSheet.getRange(currentRow, 7).setValue(lookupTHC);
+      newReportSheet.getRange(currentRow, 8).setFormula('=((E' + currentRow + '-F' + currentRow + ') * (G' + currentRow + ' / 100))*1000');
+    
+      for (var k = 0; k < validReasonCodes.length; k++) {
+        var columnLetter = String.fromCharCode(65 + (8 + k)); // Column letters for valid reason codes, starting from column I
+        newReportSheet.getRange(currentRow, 9 + k).setFormula('=IF(' + columnLetter + removedFinishedGoodsHeaderRow + '=B' + currentRow + ',H' + currentRow + ',0)');
+      }
+      currentRow++;
+    }
+  }
+  // Add totals row
+  for (var k = 0; k < validReasonCodes.length; k++) {
+    var columnLetter = String.fromCharCode(65 + (8 + k)); // Column letters for valid reason codes, starting from column I
+    newReportSheet.getRange(currentRow, 9 + k)
+      .setFormula('=SUM(' + columnLetter + (removedFinishedGoodsHeaderRow + 1) + ':' + columnLetter + (currentRow - 1) + ')')
+      .setFontWeight("bold")
+      .setBorder(true, true, true, true, true, true); // Set borders on all sides
+  }
+  currentRow++;
+    separatorRowRange = newReportSheet.getRange(currentRow, 1, 1, 10);
+    separatorRowRange.setBackground('gray');
+    separatorRowRange = newReportSheet.getRange(currentRow, 1, 1, 10);
+    separatorRowRange.setBackground('#D3D3D3');
+    newReportSheet.getRange(currentRow, 2).setValue("Raw Materials Removed For Testing or Destruction").setFontWeight("bold"); // SKU ID
+    // Increment current row
+    currentRow++;
+    var validReasonCodesTesting = [
+    'Remove For Destruction - CANNABIS',
+    'Remove For Destruction - HEMP',
+    'Remove For Destruction - EXTRACT',
+    'Remove For Testing - CANNABIS',
+    'Remove For Testing - HEMP',
+    'Remove For Testing - EXTRACT'
+    ];
+
+      // Print column headers
+  var removedRawMaterialsHeaderRow = currentRow;
+  newReportSheet.getRange(currentRow, 1).setValue('Date').setFontWeight("bold").setBackground('#D3D3D3');
+  newReportSheet.getRange(currentRow, 2).setValue('Reason Code').setFontWeight("bold").setBackground('#D3D3D3');
+  newReportSheet.getRange(currentRow, 3).setValue('SKU ID').setFontWeight("bold").setBackground('#D3D3D3');
+  newReportSheet.getRange(currentRow, 4).setValue('Lot ID').setFontWeight("bold").setBackground('#D3D3D3');
+  newReportSheet.getRange(currentRow, 5).setValue('Amount').setFontWeight("bold").setBackground('#D3D3D3');
+  newReportSheet.getRange(currentRow, 6).setValue('Environmental Loss').setFontWeight("bold").setBackground('#D3D3D3');
+  newReportSheet.getRange(currentRow, 7).setValue('Total THC %').setFontWeight("bold").setBackground('#D3D3D3');
+  newReportSheet.getRange(currentRow, 8).setValue('Total THC (kg)').setFontWeight("bold").setBackground('#D3D3D3');
+  currentRow++;
+
+   // Loop through the removed finished goods data and add rows to the new report sheet
+  for (var i = 1; i < removedFinishedGoodsData.length; i++) {
+    var dateProcessed = new Date(removedFinishedGoodsData[i][removeFinishGoodsDateColumn]);
+    var reasonCode = removedFinishedGoodsData[i][reasonCodeRemoveFinishedGoodsColumn];
+
+    if (
+      dateProcessed >= startDate &&
+      dateProcessed <= endDate &&
+      validReasonCodesTesting.includes(reasonCode)
+    ) {
+      newReportSheet.getRange(currentRow, 1).setValue(removedFinishedGoodsData[i][removeFinishGoodsDateColumn]);
+      newReportSheet.getRange(currentRow, 2).setValue(removedFinishedGoodsData[i][reasonCodeRemoveFinishedGoodsColumn]);
+      newReportSheet.getRange(currentRow, 3).setValue(removedFinishedGoodsData[i][skuIDRemoveFinishedGoodsColumn]);
+      newReportSheet.getRange(currentRow, 4).setValue(removedFinishedGoodsData[i][removeFinishedGoodsLotIDColumn]);
+      newReportSheet.getRange(currentRow, 5).setValue(removedFinishedGoodsData[i][amountRemoveFinishedGoodsColumn]);
+      newReportSheet.getRange(currentRow, 6).setValue(removedFinishedGoodsData[i][removeFinishedGoodsEnvironmentLossColumn]);
+      //Look up THC value for lot ID removedProcessingData[i][removeLotIDColumn]
+      //var lookupTHC = lookupExtractTHCFromLotID(approvedData, approvedForProcessingApprovedLotID,approvedForProcessingPercentTHCColumn,removedProcessingData[i][removeLotIDColumn]);
+
+//      var lookupTHC = lookupExtractTHCFromLotID(approvedForSalesData, approvedLotIDColumn,approvedTotalTHCColumn,removedFinishedGoodsData[i][removeFinishedGoodsLotIDColumn]);
+
+      newReportSheet.getRange(currentRow, 7).setValue('0');
+      newReportSheet.getRange(currentRow, 8).setFormula('=((E' + currentRow + '-F' + currentRow + ') * (G' + currentRow + ' / 100))/1000');
+      currentRow++;
+    }
+  }
+
+    currentRow++;
+
+    separatorRowRange = newReportSheet.getRange(currentRow, 1, 1, 10);
+    separatorRowRange.setBackground('gray');
+    separatorRowRange = newReportSheet.getRange(currentRow, 1, 1, 10);
+    separatorRowRange.setBackground('#D3D3D3');
+    newReportSheet.getRange(currentRow, 2).setValue("Added to Quarantine").setFontWeight("bold"); // SKU ID
+    // Increment current row
+    currentRow++;
+
+    // Get the active spreadsheet and the 'ADD Form Response 1' sheet
+    var addDataSheetID = '10fnz6o2mTnRVsO2ykyPbwRnTsoaPYQ9ZXJNJU2qrsmY';
+    var addDataSheet = SpreadsheetApp.openById(addDataSheetID);
+    var addDataResponses = addDataSheet.getSheetByName('Form Responses 1');
+    if (!addDataResponses) {
+      logMessage('Add Form Responses 1 sheet not found. Stopping report generation cant generate quaratine data.');
+      return;
+    }
+    var addData = addDataResponses.getDataRange().getValues();
+    logMessage('Found Add Form Responses 1 records length = ' + addData.length);
+
+    var addDateColumn = 3;// Column D (3rd column)
+    var skuIDAddColumn = 6; // Column G (6th column)
+    var amountAddColumn = 8; // Column I (8th column)
+    var reasonCodeAddColumn = 10; //Column K (10th column)
+    var lotIDAddColumn = 5;
+    
+    var validAddCodesQuarantine = [
+    'Quarantine - CANNABIS',
+    'Quarantine - HEMP',
+    'Quarantine - EXTRACT',
+    'Quarantine - FINISHED GOOD'
+    ];
+
+      // Print column headers
+      newReportSheet.getRange(currentRow, 1).setValue('Date').setFontWeight("bold").setBackground('#D3D3D3');
+      newReportSheet.getRange(currentRow, 2).setValue('Reason Code').setFontWeight("bold").setBackground('#D3D3D3');
+      newReportSheet.getRange(currentRow, 3).setValue('SKU ID').setFontWeight("bold").setBackground('#D3D3D3');
+      newReportSheet.getRange(currentRow, 4).setValue('Lot ID').setFontWeight("bold").setBackground('#D3D3D3');
+      newReportSheet.getRange(currentRow, 5).setValue('Amount').setFontWeight("bold").setBackground('#D3D3D3');
+      newReportSheet.getRange(currentRow, 6).setValue('Total THC %').setFontWeight("bold").setBackground('#D3D3D3');
+      newReportSheet.getRange(currentRow, 7).setValue('Total THC (kg)').setFontWeight("bold").setBackground('#D3D3D3');
+      currentRow++;
+
+      // Loop through the add data and add rows to the new report sheet
+      for (var i = 1; i < addData.length; i++) {
+        var dateAdded = new Date(addData[i][addDateColumn]);
+        var reasonCode = addData[i][reasonCodeAddColumn];
+
+        if (
+          dateAdded >= startDate &&
+          dateAdded <= endDate &&
+          validAddCodesQuarantine.includes(reasonCode)
+        ) {
+          newReportSheet.getRange(currentRow, 1).setValue(addData[i][addDateColumn]);
+          newReportSheet.getRange(currentRow, 2).setValue(addData[i][reasonCodeAddColumn]);
+          newReportSheet.getRange(currentRow, 3).setValue(addData[i][skuIDAddColumn]);
+          newReportSheet.getRange(currentRow, 4).setValue(addData[i][lotIDAddColumn]);
+          newReportSheet.getRange(currentRow, 5).setValue(addData[i][amountAddColumn]);
+          var lookupTHC = lookupExtractTHCFromLotID(approvedForSalesData, approvedLotIDColumn,approvedTotalTHCColumn,addData[i][lotIDAddColumn]);
+          newReportSheet.getRange(currentRow, 6).setValue(lookupTHC);
+           newReportSheet.getRange(currentRow, 7).setFormula('=(E'+currentRow + '* (F' + currentRow + '/100))/1000');
+          currentRow++;
+        }
+      }
+
+    separatorRowRange = newReportSheet.getRange(currentRow, 1, 1, 10);
+    separatorRowRange.setBackground('gray');
+    separatorRowRange = newReportSheet.getRange(currentRow, 1, 1, 10);
+    separatorRowRange.setBackground('#D3D3D3');
+    newReportSheet.getRange(currentRow, 2).setValue("Returned Goods").setFontWeight("bold"); // SKU ID
+    // Increment current row
+    currentRow++;
+    var validReasonCodesReturns = [
+    'Remove Returned - FINISHED GOOD','Returned - FINISHED GOOD','Returned - EXTRACT'
+    ];
+    //NEED TO ADD IN SEARCH FOR ADD and REMOVE with these code in date range
+
+      // Print column headers
+      newReportSheet.getRange(currentRow, 1).setValue('Date').setFontWeight("bold").setBackground('#D3D3D3');
+      newReportSheet.getRange(currentRow, 2).setValue('Reason Code').setFontWeight("bold").setBackground('#D3D3D3');
+      newReportSheet.getRange(currentRow, 3).setValue('SKU ID').setFontWeight("bold").setBackground('#D3D3D3');
+      newReportSheet.getRange(currentRow, 4).setValue('Lot ID').setFontWeight("bold").setBackground('#D3D3D3');
+      newReportSheet.getRange(currentRow, 5).setValue('Amount').setFontWeight("bold").setBackground('#D3D3D3');
+      newReportSheet.getRange(currentRow, 6).setValue('Total THC %').setFontWeight("bold").setBackground('#D3D3D3');
+      newReportSheet.getRange(currentRow, 7).setValue('Total THC (kg)').setFontWeight("bold").setBackground('#D3D3D3');
+      currentRow++;
+
+      // Loop through the add data and add rows to the new report sheet
+      for (var i = 1; i < addData.length; i++) {
+        var dateAdded = new Date(addData[i][addDateColumn]);
+        var reasonCode = addData[i][reasonCodeAddColumn];
+
+        if (
+          dateAdded >= startDate &&
+          dateAdded <= endDate &&
+          validReasonCodesReturns.includes(reasonCode)
+        ) {
+          newReportSheet.getRange(currentRow, 1).setValue(addData[i][addDateColumn]);
+          newReportSheet.getRange(currentRow, 2).setValue(addData[i][reasonCodeAddColumn]);
+          newReportSheet.getRange(currentRow, 3).setValue(addData[i][skuIDAddColumn]);
+          newReportSheet.getRange(currentRow, 4).setValue(addData[i][lotIDAddColumn]);
+          newReportSheet.getRange(currentRow, 5).setValue(addData[i][amountAddColumn]);
+          var lookupTHC = lookupExtractTHCFromLotID(approvedForSalesData, approvedLotIDColumn,approvedTotalTHCColumn,addData[i][lotIDAddColumn]);
+          newReportSheet.getRange(currentRow, 6).setValue(lookupTHC);
+           newReportSheet.getRange(currentRow, 7).setFormula('=(E'+currentRow + '* (F' + currentRow + '/100))/1000');
+          currentRow++;
+        }
+      }
+
+    logMessage('Incrementing version - SUCCESS REPORT COMPLETE');
+    activeSheet.getSheetByName('Reports').getRange('B5').setValue(version + 1);
+   }catch (e) {
+    logMessage('Error: ' + e.message);
+  }
+}
+
+function lookupExtractTHCFromLotID(approvedData, approvedForProcessingApprovedLotID,approvedForProcessingPercentTHCColumn,lookupLotId){
+      for (var i = 1; i < approvedData.length; i++) {
+      if(approvedData[i][approvedForProcessingApprovedLotID] === lookupLotId){
+          return approvedData[i][approvedForProcessingPercentTHCColumn]; 
+      }
+      }
+      return 0;
 }
