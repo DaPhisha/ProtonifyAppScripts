@@ -47,19 +47,32 @@ function invoiceFormSubmit(e) {
     // Get the file from Google Drive
     var file = DriveApp.getFileById(fileId[0]);
     
+    // Extract PO# and $amount from the file name
+    var fileName = file.getName();
+    var poMatch = fileName.match(/#(\d+)/);
+    var amountMatch = fileName.match(/\$(\d+\.\d{2})/);
+
+    var poNumber = poMatch ? poMatch[1] : 'N/A';
+    var amount = amountMatch ? amountMatch[1] : 'N/A';
+
+    // Enter the extracted PO# and $amount into columns F and G
+    sheet.getRange(row, 6).setValue(poNumber); // Column F
+    sheet.getRange(row, 7).setValue(amount); // Column G
+    
     // Create an attachment from the file
     var blob = file.getBlob();
     
     // Compose the email
-    var subject = 'New Form Submission: ' + supplier;
+    var subject = 'New Form TEST ONLY Submission: ' + supplier;
     var body = 'A new form has been submitted.\n\n' +
                'Timestamp: ' + timestamp + '\n' +
                'Email Address: ' + userEmail + '\n' +
-               'Supplier: ' + supplier + '\n\n' +
-               'Date: ' + invoiceDate + '\n\n' +
+               'Supplier: ' + supplier + '\n' +
+               'Date: ' + invoiceDate + '\n' +
+               'PO#: ' + poNumber + '\n' +
+               'Amount: $' + amount + '\n\n' +
                'Attached is the invoice file.';
-
- 
+    //to: 'protonify@qbodocs.com',
     // Send the email
     MailApp.sendEmail({
       to: 'protonify@qbodocs.com',
