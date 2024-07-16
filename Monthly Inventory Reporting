@@ -826,6 +826,7 @@ function generateCRAReport() {
     newReportSheet.getRange(currentRow,10).setBackground('#D3D3D3');
     currentRow++;
 
+    var startSectionRow = currentRow;
     // Loop through the approved data and add rows to the new report sheet
     for (var i = 1; i < approvedData.length; i++) {
       var dateProcessed = new Date(approvedData[i][approvedForProcessingDateColumn]);
@@ -846,6 +847,14 @@ function generateCRAReport() {
         currentRow++;
       }
     }
+    //GPT ADD TOTAL to column H and I. Need to sum from startSectionRow to (currentRow-1)
+    newReportSheet.getRange(currentRow, 8).setFormula('=SUM(H' + startSectionRow + ':H' + (currentRow - 1) + ')').setBorder(true, null, true, null, null, null).setFontWeight('bold');
+    newReportSheet.getRange(currentRow, 9).setFormula('=SUM(I' + startSectionRow + ':I' + (currentRow - 1) + ')').setBorder(true, null, true, null, null, null).setFontWeight('bold');
+    var totalTHCRawMaterialApprovedCell = 'H'+currentRow;
+
+
+    currentRow++;
+
     separatorRowRange = newReportSheet.getRange(currentRow, 1, 1, 10);
     separatorRowRange.setBackground('gray');
     separatorRowRange = newReportSheet.getRange(currentRow, 1, 1, 10);
@@ -868,6 +877,9 @@ function generateCRAReport() {
     currentRow++;
 
   // Loop through the removed processing data and add rows to the new report sheet
+
+  startSectionRow = currentRow;
+
   for (var i = 1; i < removedProcessingData.length; i++) {
     var dateProcessed = new Date(removedProcessingData[i][removeDateColumn]);
     var reasonCode = removedProcessingData[i][reasonCodeRemoveColumn];
@@ -889,6 +901,12 @@ function generateCRAReport() {
       currentRow++;
       }
     }
+    //GPT ADD TOTAL to column H and I. Need to sum from startSectionRow to (currentRow-1)
+    newReportSheet.getRange(currentRow, 8).setFormula('=SUM(H' + startSectionRow + ':H' + (currentRow - 1) + ')').setBorder(true, null, true, null, null, null).setFontWeight('bold');
+
+    var totalTHCRawMaterialProcessedCell = 'H'+currentRow;
+    currentRow++;
+    ///END REMOVED FOR PROCESSING
 
     //NEXT add Approved for Sale Lots
     separatorRowRange = newReportSheet.getRange(currentRow, 1, 1, 10);
@@ -926,6 +944,7 @@ function generateCRAReport() {
   newReportSheet.getRange(currentRow, 9).setBackground('#D3D3D3');
   newReportSheet.getRange(currentRow, 10).setBackground('#D3D3D3');
   currentRow++;
+  startSectionRow = currentRow;
 
   // Loop through the approved for sales data and add rows to the new report sheet
   for (var i = 1; i < approvedForSalesData.length; i++) {
@@ -941,8 +960,9 @@ function generateCRAReport() {
       currentRow++;
     }
   }
-
-
+  newReportSheet.getRange(currentRow, 7).setFormula('=SUM(G' + startSectionRow + ':G' + (currentRow - 1) + ')').setBorder(true, null, true, null, null, null).setFontWeight('bold');
+  var totalTHCFGApprovedSalesCell = 'G'+currentRow;
+  currentRow++
 
     //REMOVED FINISHED GOODS
     separatorRowRange = newReportSheet.getRange(currentRow, 1, 1, 10);
@@ -1198,6 +1218,82 @@ function generateCRAReport() {
         }
       }
 
+      /*
+      Opening flowering material / dried cannabis
+Total Add Cannabis
+Total Remove Cannanbis
+Total Cannabis Tested
+Total Cannabis Destroyed
+Count Adj / Env Loss
+Closing flowering material / dried cannabis
+
+Opening High Purity Intermediary
+Added (Approved for Processing)
+Send for Analysis
+Destroyed
+Processed
+Closing High Purity Intermediary
+
+Opening finished cannabis extracts
+
+Total Approved Finished Goods
+
+Total Shipped Finished Goods
+Total Research Finished Goods
+Total Testing Finished Goods
+Total Destruction Finished Goods
+Closing finished cannabis extracts
+
+      */
+    newReportSheet.getRange('P1').setValue('CRA SUMMARY REPORT').setFontWeight("bold").setBackground('#D3D3D3');
+    newReportSheet.getRange('P2').setValue('Opening flowering material / dried cannabis:').setFontWeight("bold").setBackground('#D3D3D3');
+    newReportSheet.getRange('Q2').setValue(0).setFontWeight("bold").setBackground('#FFFFFF');
+    newReportSheet.getRange('P3').setValue('Total Add Cannabis:').setFontWeight("bold").setBackground('#D3D3D3');
+    newReportSheet.getRange('Q3').setValue(0).setFontWeight("bold").setBackground('#FFFFFF');
+    newReportSheet.getRange('P4').setValue('Total Remove Cannabis:').setFontWeight("bold").setBackground('#D3D3D3');
+    newReportSheet.getRange('Q4').setValue(0).setFontWeight("bold").setBackground('#FFFFFF');
+    newReportSheet.getRange('P5').setValue('Total Cannabis Tested:').setFontWeight("bold").setBackground('#D3D3D3');
+    newReportSheet.getRange('Q5').setValue(0).setFontWeight("bold").setBackground('#FFFFFF');
+    newReportSheet.getRange('P6').setValue('Total Cannabis Destroyed:').setFontWeight("bold").setBackground('#D3D3D3');
+    newReportSheet.getRange('Q6').setValue(0).setFontWeight("bold").setBackground('#FFFFFF');
+    newReportSheet.getRange('P7').setValue('Count Adj / Env Loss:').setFontWeight("bold").setBackground('#D3D3D3');
+    newReportSheet.getRange('Q7').setValue(0).setFontWeight("bold").setBackground('#FFFFFF');
+    newReportSheet.getRange('P8').setValue('Closing flowering material / dried cannabis:').setFontWeight("bold").setBackground('#D3D3D3');
+    newReportSheet.getRange('Q8').setFormula('=Q2+Q3-Q4-Q5-Q6-Q7').setFontWeight("bold").setBackground('#FFFFFF');
+    
+    newReportSheet.getRange('P9').setValue('').setBackground('#D3D3D3');
+    newReportSheet.getRange('Q9').setValue('').setBackground('#D3D3D3');
+
+    newReportSheet.getRange('P10').setValue('Opening HPI:').setFontWeight("bold").setBackground('#D3D3D3');
+    newReportSheet.getRange('Q10').setValue(0).setFontWeight("bold").setBackground('#FFFFFF');
+    newReportSheet.getRange('P11').setValue('Approved for Processing:').setFontWeight("bold").setBackground('#D3D3D3');
+    newReportSheet.getRange('Q11').setFormula('='+totalTHCRawMaterialApprovedCell).setFontWeight("bold").setBackground('#FFFFFF');
+    newReportSheet.getRange('P12').setValue('Testing:').setFontWeight("bold").setBackground('#D3D3D3');
+    newReportSheet.getRange('Q12').setValue(0).setFontWeight("bold").setBackground('#FFFFFF');
+    newReportSheet.getRange('P13').setValue('Destruction:').setFontWeight("bold").setBackground('#D3D3D3');
+    newReportSheet.getRange('Q13').setValue(0).setFontWeight("bold").setBackground('#FFFFFF');
+    newReportSheet.getRange('P14').setValue('Processed:').setFontWeight("bold").setBackground('#D3D3D3');
+    newReportSheet.getRange('Q14').setFormula('='+totalTHCRawMaterialProcessedCell).setFontWeight("bold").setBackground('#FFFFFF');
+    newReportSheet.getRange('P15').setValue('Closing HPI:').setFontWeight("bold").setBackground('#D3D3D3');
+    newReportSheet.getRange('Q15').setFormula('=Q10+Q11-Q12-Q13-Q14').setFontWeight("bold").setBackground('#FFFFFF');
+
+    newReportSheet.getRange('P16').setValue('').setBackground('#D3D3D3');
+    newReportSheet.getRange('Q16').setValue('').setBackground('#D3D3D3');
+    newReportSheet.getRange('P17').setValue('Opening FG Extracts:').setFontWeight("bold").setBackground('#D3D3D3');
+    newReportSheet.getRange('Q17').setValue(0).setFontWeight("bold").setBackground('#FFFFFF');
+    newReportSheet.getRange('P18').setValue('Approved FG:').setFontWeight("bold").setBackground('#D3D3D3');
+    newReportSheet.getRange('Q18').setFormula('='+totalTHCFGApprovedSalesCell).setFontWeight("bold").setBackground('#FFFFFF');
+    newReportSheet.getRange('P19').setValue('Shipped FG:').setFontWeight("bold").setBackground('#D3D3D3');
+    newReportSheet.getRange('Q19').setValue(0).setFontWeight("bold").setBackground('#FFFFFF');
+    newReportSheet.getRange('P20').setValue('Research FG:').setFontWeight("bold").setBackground('#D3D3D3');
+    newReportSheet.getRange('Q20').setValue(0).setFontWeight("bold").setBackground('#FFFFFF');
+    newReportSheet.getRange('P21').setValue('Testing FG:').setFontWeight("bold").setBackground('#D3D3D3');
+    newReportSheet.getRange('Q21').setValue(0).setFontWeight("bold").setBackground('#FFFFFF');
+    newReportSheet.getRange('P22').setValue('Destruction FG:').setFontWeight("bold").setBackground('#D3D3D3');
+    newReportSheet.getRange('Q22').setValue(0).setFontWeight("bold").setBackground('#FFFFFF');
+    newReportSheet.getRange('P23').setValue('Closing FG Extracts:').setFontWeight("bold").setBackground('#D3D3D3');
+    newReportSheet.getRange('Q23').setFormula('=Q17+Q18-Q19-Q20-Q21-Q22').setFontWeight("bold").setBackground('#FFFFFF');
+    
     logMessage('Incrementing version - SUCCESS REPORT COMPLETE');
     activeSheet.getSheetByName('Reports').getRange('B5').setValue(version + 1);
    }catch (e) {
