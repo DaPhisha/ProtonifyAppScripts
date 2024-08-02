@@ -496,28 +496,28 @@ function generateCompleteReport() {
 
     newReportSheet.getRange('H31').setValue('Quanity received in Canada (RM)'); // SKU ID
     newReportSheet.getRange('H31').setFontWeight("bold");
-    newReportSheet.getRange('I31').setFormula('=D7/1000'); // SKU ID
+    newReportSheet.getRange('I31').setFormula('=(D7+D36+D37+D38+D39)/1000'); // SKU ID
     //newReportSheet.getRange('I8').setFormula(); // SKU ID
     newReportSheet.getRange('H31').setBackground('white');
     newReportSheet.getRange('I31').setBackground('white');
 
     newReportSheet.getRange('H32').setValue('Total production (FG)'); // SKU ID
     newReportSheet.getRange('H32').setFontWeight("bold");
-    newReportSheet.getRange('I32').setFormula('=(D8+D9+D10+D16+D17+D18+D19+D20+D21+D22+D27+D28+D29+D30+D31+D32+D33+D34+D35+D36+D37+D38)/1000-I34'); // SKU ID
+    newReportSheet.getRange('I32').setFormula('=(D8+D9+D10+D11+D12+D13+D14+D15+D16+D17+D18+D19+D20+D21+D24+D25+D26+D27+D28+D29+D30+D31+D32+D33+D34+D35)/1000-I34'); // SKU ID
     //newReportSheet.getRange('I8').setFormula(); // SKU ID
     newReportSheet.getRange('H32').setBackground('white');
     newReportSheet.getRange('I32').setBackground('white');
 
     newReportSheet.getRange('H33').setValue('Reprocessed FG'); // SKU ID
     newReportSheet.getRange('H33').setFontWeight("bold");
-    newReportSheet.getRange('I33').setFormula('=D68/1000*-1'); // SKU ID
+    newReportSheet.getRange('I33').setFormula('=D69/1000*-1'); // SKU ID
     //newReportSheet.getRange('I8').setFormula(); // SKU ID
     newReportSheet.getRange('H33').setBackground('white');
     newReportSheet.getRange('I33').setBackground('white');
 
     newReportSheet.getRange('H34').setValue('Quantity purchased/returned (FG)'); // SKU ID
     newReportSheet.getRange('H34').setFontWeight("bold");
-    newReportSheet.getRange('I34').setFormula('=(D53-D79)/1000'); // SKU ID
+    newReportSheet.getRange('I34').setFormula('=(D57-D80)/1000'); // SKU ID
     //newReportSheet.getRange('I8').setFormula(); // SKU ID
     newReportSheet.getRange('H34').setBackground('white');
     newReportSheet.getRange('I34').setBackground('white');
@@ -539,70 +539,70 @@ function generateCompleteReport() {
     newReportSheet.getRange('H37').setValue('Quantity processed extracts other (RM)'); // SKU ID
     newReportSheet.getRange('H37').setFontWeight("bold");
     //newReportSheet.getRange('I10').setValue('0'); // SKU ID
-    newReportSheet.getRange('I37').setFormula('=D67/1000'); // SKU ID
+    newReportSheet.getRange('I37').setFormula('=(D68)/1000'); // SKU ID
     newReportSheet.getRange('H37').setBackground('white');
     newReportSheet.getRange('I37').setBackground('white');
 
     newReportSheet.getRange('H38').setValue('Quantity returned to LP (RM)'); // SKU ID
     newReportSheet.getRange('H38').setFontWeight("bold");
     //newReportSheet.getRange('I10').setValue('0'); // SKU ID
-    newReportSheet.getRange('I38').setFormula('=D57/1000'); // SKU ID
+    newReportSheet.getRange('I38').setFormula('=D55/1000'); // SKU ID
     newReportSheet.getRange('H38').setBackground('white');
     newReportSheet.getRange('I38').setBackground('white');
 
     newReportSheet.getRange('H39').setValue('Quantity sent for analysis (RM)'); // SKU ID
     newReportSheet.getRange('H39').setFontWeight("bold");
     //newReportSheet.getRange('I10').setValue('0'); // SKU ID
-    newReportSheet.getRange('I39').setFormula('=(D72+D73+D74)/1000'); // SKU ID
+    newReportSheet.getRange('I39').setFormula('=(D73+D74+D75)/1000'); // SKU ID
     newReportSheet.getRange('H39').setBackground('white');
     newReportSheet.getRange('I39').setBackground('white');
 
     newReportSheet.getRange('H40').setValue('Quantity destroyed (RM)'); // SKU ID
     newReportSheet.getRange('H40').setFontWeight("bold");
     //newReportSheet.getRange('I10').setValue('0'); // SKU ID
-    newReportSheet.getRange('I40').setFormula('=(D81+D80+D82)/1000'); // SKU ID
+    newReportSheet.getRange('I40').setFormula('=(D81+D82+D83)/1000'); // SKU ID
     newReportSheet.getRange('H40').setBackground('white');
     newReportSheet.getRange('I40').setBackground('white');
 
     newReportSheet.getRange('H41').setValue('Quantity delivered in Canada (FG sold)'); // SKU ID
     newReportSheet.getRange('H41').setFontWeight("bold");
     //newReportSheet.getRange('I10').setValue('0'); // SKU ID
-    newReportSheet.getRange('I41').setFormula('=D62/1000'); // SKU ID
+    newReportSheet.getRange('I41').setFormula('=D63/1000'); // SKU ID
     newReportSheet.getRange('H41').setBackground('white');
     newReportSheet.getRange('I41').setBackground('white');
 
     newReportSheet.getRange('H42').setValue('Quantity delivered International (FG sold)'); // SKU ID
     newReportSheet.getRange('H42').setFontWeight("bold");
     //newReportSheet.getRange('I10').setValue('0'); // SKU ID
-    newReportSheet.getRange('I42').setFormula('=D61/1000'); // SKU ID
+    newReportSheet.getRange('I42').setFormula('=D62/1000'); // SKU ID
     newReportSheet.getRange('H42').setBackground('white');
     newReportSheet.getRange('I42').setBackground('white');
 
     newReportSheet.getRange('H43').setValue('Environmental Loss (FG)'); // SKU ID
     newReportSheet.getRange('H43').setFontWeight("bold");
     //newReportSheet.getRange('I10').setValue('0'); // SKU ID
-    newReportSheet.getRange('I43').setFormula('=(D58+D87)/1000'); // SKU ID
+    newReportSheet.getRange('I43').setFormula('=(D59+D88)/1000'); // SKU ID
     newReportSheet.getRange('H43').setBackground('white');
     newReportSheet.getRange('I43').setBackground('white');
 
     newReportSheet.getRange('H44').setValue('Quantity destroyed (FG)'); // SKU ID
     newReportSheet.getRange('H44').setFontWeight("bold");
     //newReportSheet.getRange('I10').setValue('0'); // SKU ID
-    newReportSheet.getRange('I44').setFormula('=D83/1000'); // SKU ID
+    newReportSheet.getRange('I44').setFormula('=D84/1000'); // SKU ID
     newReportSheet.getRange('H44').setBackground('white');
     newReportSheet.getRange('I44').setBackground('white');
 
     newReportSheet.getRange('H45').setValue('Quantity sent for analysis (FG)'); // SKU ID
     newReportSheet.getRange('H45').setFontWeight("bold");
     //newReportSheet.getRange('I10').setValue('0'); // SKU ID
-    newReportSheet.getRange('I45').setFormula('=D75/1000'); // SKU ID
+    newReportSheet.getRange('I45').setFormula('=D76/1000'); // SKU ID
     newReportSheet.getRange('H45').setBackground('white');
     newReportSheet.getRange('I45').setBackground('white');
 
     newReportSheet.getRange('H46').setValue('Quantity sent for R&D (FG)'); // SKU ID
     newReportSheet.getRange('H46').setFontWeight("bold");
     //newReportSheet.getRange('I10').setValue('0'); // SKU ID
-    newReportSheet.getRange('I46').setFormula('=D63/1000'); // SKU ID
+    newReportSheet.getRange('I46').setFormula('=D64/1000'); // SKU ID
     newReportSheet.getRange('H46').setBackground('white');
     newReportSheet.getRange('I46').setBackground('white');
 
