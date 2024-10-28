@@ -12,7 +12,6 @@ function logMessage(message) {
   var nextRow = lastRow + 1;
   var cell = loggingSheet.getRange('A' + nextRow);
   
-  // Format the date string to include only the day, month, year, and time
   var now = new Date();
   var formattedDate = Utilities.formatDate(now, Session.getScriptTimeZone(), 'dd-MM-yyyy HH:mm:ss');
   cell.setValue(formattedDate + ': ' + message);
@@ -29,14 +28,13 @@ function invoiceFormSubmit(e) {
     var row = e.range.getRow();
     var emailAddress = 'afisher@protonify.com';
 
-    // Read the values from the form response
     var timestamp = sheet.getRange(row, 1).getValue();
     var userEmail = sheet.getRange(row, 2).getValue();
     var supplier = sheet.getRange(row, 3).getValue();
     var invoiceDate = sheet.getRange(row, 4).getValue();
     var fileLink = sheet.getRange(row, 5).getValue();
-
-    // Extract file ID from the file link
+    var paymentStatus = sheet.getRange(row, 8).getValue();
+    
     var fileId = fileLink.match(/[-\w]{25,}/);
     if (!fileId) {
       logMessage('File ID not found in the link.');
@@ -44,10 +42,8 @@ function invoiceFormSubmit(e) {
     }
     logMessage('Invoice submission started');
     
-    // Get the file from Google Drive
     var file = DriveApp.getFileById(fileId[0]);
     
-    // Extract PO# and $amount from the file name
     var fileName = file.getName();
     var poMatch = fileName.match(/#(\d+)/);
     var amountMatch = fileName.match(/\$(\d+\.\d{2})/);
@@ -55,25 +51,22 @@ function invoiceFormSubmit(e) {
     var poNumber = poMatch ? poMatch[1] : 'N/A';
     var amount = amountMatch ? amountMatch[1] : 'N/A';
 
-    // Enter the extracted PO# and $amount into columns F and G
-    sheet.getRange(row, 6).setValue(poNumber); // Column F
-    sheet.getRange(row, 7).setValue(amount); // Column G
+    sheet.getRange(row, 6).setValue(poNumber);
+    sheet.getRange(row, 7).setValue(amount);
     
-    // Create an attachment from the file
     var blob = file.getBlob();
     
-    // Compose the email
-    var subject = 'New Form TEST ONLY Submission: ' + supplier;
+    var subject = 'Invoice Submission: ' + supplier;
     var body = 'A new form has been submitted.\n\n' +
                'Timestamp: ' + timestamp + '\n' +
                'Email Address: ' + userEmail + '\n' +
                'Supplier: ' + supplier + '\n' +
                'Date: ' + invoiceDate + '\n' +
                'PO#: ' + poNumber + '\n' +
-               'Amount: $' + amount + '\n\n' +
+               'Amount: $' + amount + '\n' +
+               'Payment Status: ' + paymentStatus + '\n\n' +
                'Attached is the invoice file.';
-    //to: 'protonify@qbodocs.com',
-    // Send the email
+    
     MailApp.sendEmail({
       to: 'protonify@qbodocs.com',
       cc: 'dtillson@protonify.com,afisher@protonify.com',
@@ -83,17 +76,14 @@ function invoiceFormSubmit(e) {
       attachments: [blob]
     });
 
-    // On successful send, write a copy of the file into a root folder
     var rootFolderId = '1eaTKq-_GbKNmQ836kmiwayszQQPmpRgo';
     var rootFolder = DriveApp.getFolderById(rootFolderId);
 
-    // Calculate MonthYear from the user-inputted invoiceDate
     var invoiceDateObj = new Date(invoiceDate);
     var month = invoiceDateObj.toLocaleString('default', { month: 'long' });
     var year = invoiceDateObj.getFullYear();
     var monthYear = month + year;
 
-    // Create subfolder path
     var supplierFolder;
     var folders = rootFolder.getFoldersByName(supplier);
     if (folders.hasNext()) {
@@ -110,8 +100,17 @@ function invoiceFormSubmit(e) {
       monthYearFolder = supplierFolder.createFolder(monthYear);
     }
 
-    // Copy the file into the new folder
-    file.makeCopy(file.getName(), monthYearFolder);
+    // Create or get the paymentStatus subfolder within the monthYear folder
+    var paymentStatusFolder;
+    folders = monthYearFolder.getFoldersByName(paymentStatus);
+    if (folders.hasNext()) {
+      paymentStatusFolder = folders.next();
+    } else {
+      paymentStatusFolder = monthYearFolder.createFolder(paymentStatus);
+    }
+
+    // Copy the file into the new paymentStatus subfolder
+    file.makeCopy(file.getName(), paymentStatusFolder);
 
     logMessage('Invoice submitted by ' + userEmail + ' from ' + supplier + ' has been emailed and saved.');
   } catch (e) {
@@ -119,7 +118,6 @@ function invoiceFormSubmit(e) {
   }
 }
 
-// Install the trigger
 function installTrigger() {
   ScriptApp.newTrigger('invoiceFormSubmit')
     .forSpreadsheet(activeSheetId)
