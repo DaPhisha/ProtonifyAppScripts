@@ -1,0 +1,29 @@
+function myFunction(e) {
+  var values = e.namedValues;
+  var htmlBody = '<ul>';
+  var NextCalendarEvent;
+  var CalendarTitle;
+  for (Key in values) {
+    var label = Key;
+    var data = values[Key];
+    htmlBody += '<li>' + label + ": " + data + '</li>';
+  };
+  htmlBody += '</ul>';
+  htmlBody += "<a href=\'https://sites.google.com/protonify.com/portal/forms/logs/frm-2057-controlpointlog?read_current=1\'>Link to Form</a>";
+  //https://sites.google.com/protonify.com/portal/forms/logs/frm-2057-controlpointlog
+  NextCalendarEvent = values['Date of Next Inspection'];
+  CalendarTitle = 'FRM-2057-ControlPointLog: ' + values['Control Point ID'];
+
+  /*htmlBody += 'Next Calendar Event Date: ' + NextCalendarEvent;*/
+  //GmailApp.sendEmail('afisher@protonify.com',CalendarTitle,'',{htmlBody:htmlBody});
+  //GmailApp.sendEmail('dfisher@protonify.com',CalendarTitle,'',{htmlBody:htmlBody});
+   GmailApp.sendEmail('levi@protonify.com',CalendarTitle,'',{htmlBody:htmlBody});
+
+  var calEvent = CalendarApp.createAllDayEvent(CalendarTitle,new Date(NextCalendarEvent));
+  //calEvent.addGuest("afisher@protonify.com");
+  //calEvent.addGuest("dfisher@protonify.com");
+  calEvent.addGuest("levi@protonify.com");
+  calEvent.setDescription(htmlBody);
+  calEvent.addPopupReminder(240);
+  calEvent.addSmsReminder(240);
+}
