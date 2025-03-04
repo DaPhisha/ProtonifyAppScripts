@@ -3,7 +3,7 @@
  * Date: 2024-07-05
  * Author: [Your Name]
  * Description: This script generates a complete report based on date ranges specified in a Google Sheet. It reads data from 'Form Response 1' tab and uses SKU ID, Add Code, and Remove Code from other tabs for filtering.
- * Version: 1.0.3
+ * Version: 1.0.4
  * Last Modified Mar 4, 2025
  */
 // Helper function to log messages for debugging
@@ -497,7 +497,7 @@ function generateCompleteReport() {
 
     newReportSheet.getRange('H31').setValue('Quanity received in Canada (RM)'); // SKU ID
     newReportSheet.getRange('H31').setFontWeight("bold");
-    newReportSheet.getRange('I31').setFormula('=(D7+D36+D37+D38+D39)/1000'); // SKU ID
+    newReportSheet.getRange('I31').setFormula('=(D7+D36+D37+D38+D39+D21)/1000'); // SKU ID
     //newReportSheet.getRange('I8').setFormula(); // SKU ID
     newReportSheet.getRange('H31').setBackground('white');
     newReportSheet.getRange('I31').setBackground('white');
