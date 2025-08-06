@@ -3,8 +3,8 @@
  * Date: 2024-07-05
  * Author: [Your Name]
  * Description: This script generates a complete report based on date ranges specified in a Google Sheet. It reads data from 'Form Response 1' tab and uses SKU ID, Add Code, and Remove Code from other tabs for filtering.
- * Version: 1.0.5
- * Last Modified Mar 5, 2025
+ * Version: 1.0.6
+ * Last Modified Aug 6, 2025
  */
 // Helper function to log messages for debugging
 
@@ -818,7 +818,7 @@ function generateCRAReport() {
     newReportSheet.getRange(currentRow, 1).setValue('Type').setFontWeight("bold").setBackground('#D3D3D3');
     newReportSheet.getRange(currentRow, 2).setValue('Date').setFontWeight("bold").setBackground('#D3D3D3');
     newReportSheet.getRange(currentRow, 3).setValue('Approved Lot ID').setFontWeight("bold").setBackground('#D3D3D3');
-    newReportSheet.getRange(currentRow, 4).setValue('Amount').setFontWeight("bold").setBackground('#D3D3D3');
+    newReportSheet.getRange(currentRow, 4).setValue('Amount (g)').setFontWeight("bold").setBackground('#D3D3D3');
     newReportSheet.getRange(currentRow, 5).setValue('PO Number').setFontWeight("bold").setBackground('#D3D3D3');
     newReportSheet.getRange(currentRow, 6).setValue('Percent THC').setFontWeight("bold").setBackground('#D3D3D3');
     newReportSheet.getRange(currentRow, 7).setValue('Percent THCA').setFontWeight("bold").setBackground('#D3D3D3');
@@ -869,7 +869,7 @@ function generateCRAReport() {
     newReportSheet.getRange(currentRow, 2).setValue('Date').setFontWeight("bold").setBackground('#D3D3D3');
     newReportSheet.getRange(currentRow, 3).setValue('SKU ID').setFontWeight("bold").setBackground('#D3D3D3');
     newReportSheet.getRange(currentRow, 4).setValue('Lot ID').setFontWeight("bold").setBackground('#D3D3D3');
-    newReportSheet.getRange(currentRow, 5).setValue('Amount').setFontWeight("bold").setBackground('#D3D3D3');
+    newReportSheet.getRange(currentRow, 5).setValue('Amount (g)').setFontWeight("bold").setBackground('#D3D3D3');
     newReportSheet.getRange(currentRow, 6).setValue('Environmental Loss').setFontWeight("bold").setBackground('#D3D3D3');
     newReportSheet.getRange(currentRow, 7).setValue('Total THC %').setFontWeight("bold").setBackground('#D3D3D3');
     newReportSheet.getRange(currentRow, 8).setValue('Total THC (kg)').setFontWeight("bold").setBackground('#D3D3D3');
@@ -1007,7 +1007,7 @@ function generateCRAReport() {
   newReportSheet.getRange(currentRow, 2).setValue('Reason Code').setFontWeight("bold").setBackground('#D3D3D3');
   newReportSheet.getRange(currentRow, 3).setValue('SKU ID').setFontWeight("bold").setBackground('#D3D3D3');
   newReportSheet.getRange(currentRow, 4).setValue('Lot ID').setFontWeight("bold").setBackground('#D3D3D3');
-  newReportSheet.getRange(currentRow, 5).setValue('Amount').setFontWeight("bold").setBackground('#D3D3D3');
+  newReportSheet.getRange(currentRow, 5).setValue('Amount (g)').setFontWeight("bold").setBackground('#D3D3D3');
   newReportSheet.getRange(currentRow, 6).setValue('Environmental Loss').setFontWeight("bold").setBackground('#D3D3D3');
   newReportSheet.getRange(currentRow, 7).setValue('Total THC %').setFontWeight("bold").setBackground('#D3D3D3');
   newReportSheet.getRange(currentRow, 8).setValue('Total THC (mg)').setFontWeight("bold").setBackground('#D3D3D3');
@@ -1076,7 +1076,7 @@ function generateCRAReport() {
   newReportSheet.getRange(currentRow, 2).setValue('Reason Code').setFontWeight("bold").setBackground('#D3D3D3');
   newReportSheet.getRange(currentRow, 3).setValue('SKU ID').setFontWeight("bold").setBackground('#D3D3D3');
   newReportSheet.getRange(currentRow, 4).setValue('Lot ID').setFontWeight("bold").setBackground('#D3D3D3');
-  newReportSheet.getRange(currentRow, 5).setValue('Amount').setFontWeight("bold").setBackground('#D3D3D3');
+  newReportSheet.getRange(currentRow, 5).setValue('Amount (g)').setFontWeight("bold").setBackground('#D3D3D3');
   newReportSheet.getRange(currentRow, 6).setValue('Environmental Loss').setFontWeight("bold").setBackground('#D3D3D3');
   newReportSheet.getRange(currentRow, 7).setValue('Total THC %').setFontWeight("bold").setBackground('#D3D3D3');
   newReportSheet.getRange(currentRow, 8).setValue('Total THC (kg)').setFontWeight("bold").setBackground('#D3D3D3');
@@ -1148,7 +1148,7 @@ function generateCRAReport() {
       newReportSheet.getRange(currentRow, 2).setValue('Reason Code').setFontWeight("bold").setBackground('#D3D3D3');
       newReportSheet.getRange(currentRow, 3).setValue('SKU ID').setFontWeight("bold").setBackground('#D3D3D3');
       newReportSheet.getRange(currentRow, 4).setValue('Lot ID').setFontWeight("bold").setBackground('#D3D3D3');
-      newReportSheet.getRange(currentRow, 5).setValue('Amount').setFontWeight("bold").setBackground('#D3D3D3');
+      newReportSheet.getRange(currentRow, 5).setValue('Amount (g)').setFontWeight("bold").setBackground('#D3D3D3');
       newReportSheet.getRange(currentRow, 6).setValue('Total THC %').setFontWeight("bold").setBackground('#D3D3D3');
       newReportSheet.getRange(currentRow, 7).setValue('Total THC (kg)').setFontWeight("bold").setBackground('#D3D3D3');
       currentRow++;
@@ -1192,7 +1192,7 @@ function generateCRAReport() {
       newReportSheet.getRange(currentRow, 2).setValue('Reason Code').setFontWeight("bold").setBackground('#D3D3D3');
       newReportSheet.getRange(currentRow, 3).setValue('SKU ID').setFontWeight("bold").setBackground('#D3D3D3');
       newReportSheet.getRange(currentRow, 4).setValue('Lot ID').setFontWeight("bold").setBackground('#D3D3D3');
-      newReportSheet.getRange(currentRow, 5).setValue('Amount').setFontWeight("bold").setBackground('#D3D3D3');
+      newReportSheet.getRange(currentRow, 5).setValue('Amount (g)').setFontWeight("bold").setBackground('#D3D3D3');
       newReportSheet.getRange(currentRow, 6).setValue('Total THC %').setFontWeight("bold").setBackground('#D3D3D3');
       newReportSheet.getRange(currentRow, 7).setValue('Total THC (kg)').setFontWeight("bold").setBackground('#D3D3D3');
       currentRow++;
@@ -1295,6 +1295,12 @@ Closing finished cannabis extracts
     newReportSheet.getRange('P23').setValue('Closing FG Extracts:').setFontWeight("bold").setBackground('#D3D3D3');
     newReportSheet.getRange('Q23').setFormula('=Q17+Q18-Q19-Q20-Q21-Q22').setFontWeight("bold").setBackground('#FFFFFF');
     
+    newReportSheet.getRange('P26').setValue('Dying / Loss Raw Material (kg)').setFontWeight("bold").setBackground('#D3D3D3');
+    newReportSheet.getRange('Q23').setValue('').setFontWeight("bold").setBackground('#FFFFFF');
+
+    newReportSheet.getRange('P27').setValue('Dying / Loss Finished Goods (mg)').setFontWeight("bold").setBackground('#D3D3D3');
+    newReportSheet.getRange('Q23').setValue('').setFontWeight("bold").setBackground('#FFFFFF');
+
     logMessage('Incrementing version - SUCCESS REPORT COMPLETE');
     activeSheet.getSheetByName('Reports').getRange('B5').setValue(version + 1);
    }catch (e) {
