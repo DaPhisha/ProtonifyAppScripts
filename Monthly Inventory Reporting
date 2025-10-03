@@ -4,7 +4,8 @@
  * Author: [Your Name]
  * Description: This script generates a complete report based on date ranges specified in a Google Sheet. It reads data from 'Form Response 1' tab and uses SKU ID, Add Code, and Remove Code from other tabs for filtering.
  * Version: 1.0.6
- * Last Modified Aug 6, 2025
+ * Last Modified Oct 3, 2025 
+ * fixed the calc total on env loss for FG vs RM
  */
 // Helper function to log messages for debugging
 
@@ -582,7 +583,7 @@ function generateCompleteReport() {
     newReportSheet.getRange('H43').setValue('Environmental Loss (FG)'); // SKU ID
     newReportSheet.getRange('H43').setFontWeight("bold");
     //newReportSheet.getRange('I10').setValue('0'); // SKU ID
-    newReportSheet.getRange('I43').setFormula('=(D59+D88)/1000'); // SKU ID
+    newReportSheet.getRange('I43').setFormula('=(D88)/1000'); // SKU ID
     newReportSheet.getRange('H43').setBackground('white');
     newReportSheet.getRange('I43').setBackground('white');
 
