@@ -3,11 +3,11 @@
  * Date: 2024-07-05
  * Author: [Your Name]
  * Description: This script generates a complete report based on date ranges specified in a Google Sheet. It reads data from 'Form Response 1' tab and uses SKU ID, Add Code, and Remove Code from other tabs for filtering.
- * Version: 1.0.6
- * Last Modified Oct 3, 2025 
- * fixed the calc total on env loss for FG vs RM
+ * Version: 1.0.7
+ * Last Modified Jan 2, 2026
  */
-// Helper function to log messages for debugging
+// Helper function to log messages for debugging aug-15-25
+// fixed the inventory FG calculation for new processing model jan-02-26
 
 function clearLog(){
   var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Reports');
@@ -505,7 +505,7 @@ function generateCompleteReport() {
 
     newReportSheet.getRange('H32').setValue('Total production (FG)'); // SKU ID
     newReportSheet.getRange('H32').setFontWeight("bold");
-    newReportSheet.getRange('I32').setFormula('=(D8+D9+D10+D11+D12+D13+D14+D15+D16+D17+D18+D19+D20+D21+D24+D25+D26+D27+D28+D29+D30+D31+D32+D33+D34+D35)/1000-I34'); // SKU ID
+    newReportSheet.getRange('I32').setFormula('=(D8+D9+D10+D11+D12+D13+D14+D15+D16+D17+D18+D19+D20+D21+D24+D25+D26+D27+D28+D29+D30+D31+D32+D33+D34+D35)/1000-I34+(D47/1000)+(D69/1000)'); // SKU ID
     //newReportSheet.getRange('I8').setFormula(); // SKU ID
     newReportSheet.getRange('H32').setBackground('white');
     newReportSheet.getRange('I32').setBackground('white');
